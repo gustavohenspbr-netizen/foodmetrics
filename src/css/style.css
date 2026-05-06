@@ -343,6 +343,12 @@ a { text-decoration: none; color: inherit; }
   .numeros { grid-template-columns: 1fr; }
   .cta-box { padding: 32px 20px; }
   .solucao__stats { flex-direction: column; }
+  .section { padding: 60px 0; }
+  .btn--xxl, .btn--xl { padding: 18px 24px; font-size: 1rem; }
+  .footer__links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .hero__left { padding: 100px 24px 60px; }
+  .garantia { flex-direction: column; text-align: center; }
+  .garantia span { margin-bottom: 8px; }
 }
 
 /* ===== SCROLL REVEAL ===== */
@@ -522,4 +528,3 @@ a { text-decoration: none; color: inherit; }
 .numero p { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
 
 @media (max-width: 960px) { .numeros { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 600px) { .numeros { grid-template-columns: 1fr; } }
