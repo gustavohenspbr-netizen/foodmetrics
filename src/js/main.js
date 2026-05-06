@@ -149,3 +149,17 @@ if (heroImg) {
     heroImg.style.transform = `translateY(${y * 0.08}px)`;
   }, { passive: true });
 }
+
+// ===== FAQ ACCORDION LOGIC =====
+const faqItems = document.querySelectorAll('.faq__item');
+faqItems.forEach(item => {
+  item.addEventListener('toggle', (e) => {
+    if (item.open) {
+      faqItems.forEach(otherItem => {
+        if (otherItem !== item && otherItem.open) {
+          otherItem.open = false;
+        }
+      });
+    }
+  });
+});
