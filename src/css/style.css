@@ -273,7 +273,6 @@ a { text-decoration: none; color: inherit; }
 .section:nth-child(even) { background: var(--bg2); }
 
 /* ===== DORES ===== */
-.dores__grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
 .dores__title, .pilares__title { font-size: clamp(1.8rem, 3vw, 2.5rem); margin-bottom: 16px; }
 .dores__cta, .pilares__cta { text-align: center; margin-top: 48px; }
 
@@ -333,7 +332,6 @@ a { text-decoration: none; color: inherit; }
 .metodo-step p { color: var(--muted); font-size: 0.95rem; line-height: 1.7; }
 
 /* ===== PILARES ===== */
-.pilares__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
 .pilar { padding: 0; overflow: hidden; transition: transform var(--transition); display: flex; flex-direction: column; }
 .pilar:hover { transform: translateY(-6px); }
 .pilar--featured { border-color: rgba(255,140,0,0.4); }
@@ -486,7 +484,6 @@ a { text-decoration: none; color: inherit; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 960px) {
-  .dores__grid, .pilares__grid { grid-template-columns: 1fr; }
   .solucao__inner, .estrategias__inner { grid-template-columns: 1fr; gap: 40px; }
   .estrategias__content { position: static; }
   .solucao__img-badge { left: 16px; }
