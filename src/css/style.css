@@ -528,3 +528,101 @@ a { text-decoration: none; color: inherit; }
 .numero p { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
 
 @media (max-width: 960px) { .numeros { grid-template-columns: 1fr 1fr; } }
+
+/* ===== DYNAMIC & PREMIUM ELEMENTS ===== */
+/* Ambient Floating Orbs */
+.ambient-orbs {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: float-up 20s infinite ease-in-out alternate;
+}
+.orb-1 { width: 300px; height: 300px; bottom: -10%; left: 10%; animation-delay: 0s; }
+.orb-2 { width: 400px; height: 400px; top: 20%; right: 5%; animation-delay: -5s; background: radial-gradient(circle, rgba(234,88,12,0.12) 0%, transparent 70%); }
+.orb-3 { width: 250px; height: 250px; bottom: 30%; left: 40%; animation-delay: -10s; }
+.orb-4 { width: 350px; height: 350px; top: -10%; right: 40%; animation-delay: -15s; }
+
+@keyframes float-up {
+  0% { transform: translateY(0) scale(1); opacity: 0.5; }
+  50% { transform: translateY(-50px) scale(1.1); opacity: 0.8; }
+  100% { transform: translateY(-100px) scale(0.9); opacity: 0.5; }
+}
+
+/* Spinning SVG Stamp */
+.stamp-badge {
+  position: absolute;
+  top: 15%;
+  left: -5%;
+  width: 140px;
+  height: 140px;
+  z-index: 3;
+  animation: spin-stamp 15s linear infinite;
+  pointer-events: none;
+}
+.stamp-badge svg { width: 100%; height: 100%; }
+.stamp-badge text {
+  font-family: var(--font-h);
+  font-size: 13.5px;
+  font-weight: 800;
+  fill: var(--primary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+@keyframes spin-stamp {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Staggered Load Animations */
+.stagger-up {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hero__left > .stagger-up:nth-child(1) { animation-delay: 0.1s; }
+.hero__left > .stagger-up:nth-child(2) { animation-delay: 0.2s; }
+.hero__left > .stagger-up:nth-child(3) { animation-delay: 0.3s; }
+.hero__left > .stagger-up:nth-child(4) { animation-delay: 0.4s; }
+.hero__left > .stagger-up:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fade-up {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animated Pulse Border Glow for Featured Cards */
+.pilar--featured, .dore-card--featured {
+  position: relative;
+  z-index: 1;
+}
+.pilar--featured::after, .dore-card--featured::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  animation: pulse-border-glow 3s infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+@keyframes pulse-border-glow {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* Reversed Logos Marquee */
+.logos-marquee--reverse {
+  animation: logos-scroll-reverse 25s linear infinite;
+}
+@keyframes logos-scroll-reverse {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
