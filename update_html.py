@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import re
+
+html_content = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -11,11 +13,6 @@
   <link rel="stylesheet" href="/src/css/style.css" />
 </head>
 <body>
-  <div class="bg-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
 
   <!-- HEADER -->
   <header class="header" id="header">
@@ -86,13 +83,18 @@
   <section class="section dores" id="dores">
     <div class="container">
       <div class="section__header reveal">
-        <h2 class="section__title dores__title">Você tem um restaurante ou delivery e se identifica com pelo menos uma dessas <span class="highlight">dores?</span></h2>
+        <h2 class="section__title" style="font-size: 2.2rem;">Você tem um restaurante ou delivery e se identifica com pelo menos uma dessas <span class="highlight">dores?</span></h2>
       </div>
       <div class="dores__grid grid-bento">
         <!-- Dor 1 -->
         <div class="glass-card dore-card col-4 reveal">
           <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (1).svg" alt="Dor 1" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path class="anim-bounce" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="17" y1="8" x2="23" y2="14" class="anim-wiggle"/>
+              <line x1="23" y1="8" x2="17" y2="14" class="anim-wiggle"/>
+            </svg>
           </div>
           <h3>Dificuldade para atrair novos clientes.</h3>
           <p>Seu restaurante tem qualidade, mas as mesas continuam vazias. Você investe em produtos e atendimento de primeira, mas os clientes simplesmente não aparecem. O problema não é seu negócio — é que as pessoas ainda não sabem que você existe.</p>
@@ -100,7 +102,10 @@
         <!-- Dor 2 -->
         <div class="glass-card dore-card dore-card--featured col-8 reveal">
           <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (2).svg" alt="Dor 2" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" class="anim-pulse"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
           </div>
           <h3>Custo alto com marketing que não traz resultados.</h3>
           <p>Você já gastou com panfletos, impulsionamentos e até agências que prometeram resultados milagrosos. No fim, pouco ou nenhum retorno. O caixa sangra e você não sabe se o problema é o marketing ou seu negócio. A verdade: marketing sem estratégia é só despesa disfarçada.</p>
@@ -108,7 +113,11 @@
         <!-- Dor 3 -->
         <div class="glass-card dore-card col-4 reveal">
           <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (3).svg" alt="Dor 3" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" class="anim-wiggle"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <path d="M1 1l22 22" class="anim-wiggle"/>
+            </svg>
           </div>
           <h3>Baixa visibilidade no mundo digital.</h3>
           <p>Quando alguém busca "restaurante perto de mim", aparecem todos os concorrentes — menos você. Suas redes têm poucos seguidores, suas postagens não geram engajamento. Enquanto isso, lugares com menos qualidade dominam o digital e faturam mais.</p>
@@ -116,7 +125,9 @@
         <!-- Dor 4 -->
         <div class="glass-card dore-card col-4 reveal">
           <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (4).svg" alt="Dor 4" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M12 18V6"/><path d="M8 21h8"/>
+            </svg>
           </div>
           <h3>Dependência excessiva de plataformas como iFood, com taxas abusivas.</h3>
           <p>Você trabalha de sol a sol, os pedidos chegam, mas no fim do mês o lucro desaparece nas taxas de 20%, 30% ou mais. Você virou refém: sem os apps não tem movimento, com eles mal sobra margem. E o pior: os clientes são do app, não seus.</p>
@@ -124,13 +135,15 @@
         <!-- Dor 5 -->
         <div class="glass-card dore-card col-4 reveal">
           <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (5).svg" alt="Dor 5" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
           </div>
           <h3>Falta de tempo para gerenciar redes sociais e campanhas.</h3>
-          <p>Você sabe que precisa postar, mas quando? Entre gestão, equipe e qualidade do serviço, sobra zero tempo. Suas redes ficam abandonadas enquanto concorrentes crescem no digital.</p>
+          <p>Você sabe que precisa postar, engajar, criar conteúdo... mas quando? Entre gestão, equipe, fornecedores e qualidade do serviço, sobra zero tempo. Resultado: suas redes ficam abandonadas enquanto concorrentes crescem no digital.</p>
         </div>
       </div>
-      <div class="dores__cta">
+      <div style="text-align: center; margin-top: 3rem;">
         <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary btn--xl pulse">
           QUERO AUMENTAR MEU FATURAMENTO!
         </a>
@@ -153,13 +166,6 @@
         <img src="/images/imgi_11_Frame-37.webp" alt="Cliente" />
         <img src="/images/imgi_12_Frame-36.webp" alt="Cliente" />
         <img src="/images/imgi_13_Frame-23.webp" alt="Cliente" />
-        <img src="/images/imgi_14_Frame-22.webp" alt="Cliente" />
-        <img src="/images/imgi_15_Frame-21.webp" alt="Cliente" />
-        <img src="/images/imgi_16_Frame-28.webp" alt="Cliente" />
-        <img src="/images/imgi_17_Frame-29.webp" alt="Cliente" />
-        <img src="/images/imgi_18_Frame-30.webp" alt="Cliente" />
-        <img src="/images/imgi_19_Frame-32.webp" alt="Cliente" />
-        <img src="/images/imgi_20_Frame-31.webp" alt="Cliente" />
         <!-- Duplicate -->
         <img src="/images/imgi_3_Frame-27.webp" alt="Cliente" aria-hidden="true" />
         <img src="/images/imgi_4_Frame-1.webp" alt="Cliente" aria-hidden="true" />
@@ -171,13 +177,6 @@
         <img src="/images/imgi_11_Frame-37.webp" alt="Cliente" aria-hidden="true" />
         <img src="/images/imgi_12_Frame-36.webp" alt="Cliente" aria-hidden="true" />
         <img src="/images/imgi_13_Frame-23.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_14_Frame-22.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_15_Frame-21.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_16_Frame-28.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_17_Frame-29.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_18_Frame-30.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_19_Frame-32.webp" alt="Cliente" aria-hidden="true" />
-        <img src="/images/imgi_20_Frame-31.webp" alt="Cliente" aria-hidden="true" />
       </div>
     </div>
   </section>
@@ -196,42 +195,23 @@
   </section>
 
   <!-- 3 CARDS: AJUDAMOS VOCE -->
-  <section class="section pilares" id="ajudamos">
+  <section class="section pilares" id="ajudamos" style="padding-top: 0;">
     <div class="container">
       <div class="section__header reveal">
-        <h2 class="section__title pilares__title">Com uma metodologia validada e um time especializado em marketing gastronômico, ajudamos você a:</h2>
+        <h2 class="section__title" style="font-size: 2rem;">Com uma metodologia validada e um time especializado em marketing gastronômico, ajudamos você a:</h2>
       </div>
       <div class="pilares__grid grid-3">
-        <div class="glass-card pilar reveal">
-          <div class="pilar__img-wrapper">
-            <img src="/images/imgi_26_Dobra-01.avif" alt="Conquistar Clientes" class="pilar__img" />
-          </div>
-          <div class="pilar__content">
-            <h3>Conquistar Clientes Fiéis</h3>
-            <p>Atraímos o público certo para o seu restaurante através de campanhas focadas na experiência.</p>
-          </div>
+        <div class="glass-card pilar reveal" style="padding: 3rem 2rem; text-align: center;">
+          <h3 style="font-size: 1.8rem; text-transform: uppercase;">Conquistar Clientes Fiéis</h3>
         </div>
-        <div class="glass-card pilar pilar--featured reveal">
-          <div class="pilar__badge">Foco Principal</div>
-          <div class="pilar__img-wrapper">
-            <img src="/images/imgi_28_Dobra-02.avif" alt="Reduzir Custos" class="pilar__img" />
-          </div>
-          <div class="pilar__content">
-            <h3>Reduzir Custos</h3>
-            <p>Otimizamos seus investimentos em marketing e plataformas para aumentar sua margem de lucro.</p>
-          </div>
+        <div class="glass-card pilar pilar--featured reveal" style="padding: 3rem 2rem; text-align: center;">
+          <h3 style="font-size: 1.8rem; text-transform: uppercase;">Reduzir Custos</h3>
         </div>
-        <div class="glass-card pilar reveal">
-          <div class="pilar__img-wrapper">
-            <img src="/images/imgi_27_Dobra-3.webp" alt="Aumentar Faturamento" class="pilar__img" />
-          </div>
-          <div class="pilar__content">
-            <h3>Aumentar Seu Faturamento</h3>
-            <p>Estratégias diretas e eficientes para lotar suas mesas e bombar os pedidos no seu delivery.</p>
-          </div>
+        <div class="glass-card pilar reveal" style="padding: 3rem 2rem; text-align: center;">
+          <h3 style="font-size: 1.8rem; text-transform: uppercase;">Aumentar Seu Faturamento</h3>
         </div>
       </div>
-      <div class="pilares__cta">
+      <div style="text-align: center; margin-top: 3rem;">
         <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary btn--xl pulse">
           QUERO AUMENTAR MEU FATURAMENTO!
         </a>
@@ -250,7 +230,9 @@
         <!-- 1 -->
         <div class="glass-card dore-card dore-card--featured col-12 reveal">
           <div class="icon-anim icon-anim--blue" tabindex="0">
-            <img src="/images/download (11).svg" alt="Icon" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4.1 12 6"/><path d="M5.1 8l-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/>
+            </svg>
           </div>
           <h3>Tráfego Pago focado em Performance</h3>
           <p>Anúncios que não geram vendas são apenas despesa. Criamos e otimizamos campanhas no Meta Ads e Google Ads com foco total em resultados: mais pedidos, reservas e clientes recorrentes. Cada real investido é monitorado para garantir o melhor retorno possível.</p>
@@ -258,7 +240,9 @@
         <!-- 2 -->
         <div class="glass-card dore-card col-6 reveal">
           <div class="icon-anim icon-anim--blue" tabindex="0">
-            <img src="/images/download (12).svg" alt="Icon" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
           </div>
           <h3>Google Meu Negócio</h3>
           <p>Otimizamos seu perfil no Google para dominar as buscas locais, aumentar sua visibilidade e transformar pesquisas em clientes dentro do seu estabelecimento.</p>
@@ -266,7 +250,9 @@
         <!-- 3 -->
         <div class="glass-card dore-card col-6 reveal">
           <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (13).svg" alt="Icon" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
           </div>
           <h3>Gestão do Ifood</h3>
           <p>Estar no iFood não basta — é preciso se destacar. Gerenciamos seu cardápio, fotos, promoções e posicionamento na plataforma para você vender mais, reduzir taxas e construir autoridade mesmo dentro do aplicativo.</p>
@@ -274,7 +260,9 @@
         <!-- 4 -->
         <div class="glass-card dore-card col-6 reveal">
           <div class="icon-anim icon-anim--green" tabindex="0">
-            <img src="/images/download (14).svg" alt="Icon" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
           </div>
           <h3>Recuperação de vendas por Whatsapp</h3>
           <p>Cliente que pediu uma vez pode pedir de novo — se você souber como abordá-lo. Criamos estratégias de remarketing pelo WhatsApp para reativar clientes inativos, aumentar o ticket médio e transformar compradores ocasionais em frequentes.</p>
@@ -282,7 +270,9 @@
         <!-- 5 -->
         <div class="glass-card dore-card col-6 reveal">
           <div class="icon-anim icon-anim--amber" tabindex="0">
-            <img src="/images/download (15).svg" alt="Icon" class="dores-card__icon" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
           </div>
           <h3>Engenharia de Cardápio Digital</h3>
           <p>Seu cardápio online pode ser o vilão das suas vendas. Reestruturamos fotos, descrições, precificação e ordem dos produtos para guiar o cliente às escolhas mais lucrativas e aumentar seu faturamento sem esforço extra.</p>
@@ -294,49 +284,18 @@
   <!-- PLAQUINHAS -->
   <section class="section plaquinhas" id="conquistas">
     <div class="container solucao__inner">
-      <div class="plaquinhas__img-wrap reveal">
-        <div class="marquee-vertical-col marquee-up">
-          <img src="/images/imgi_36_Frame-1707478354.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_38_Frame-1707478352.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_40_Frame-1707478355.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_42_Frame-1707478360.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_44_Frame-1707478357.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_22_Frame-1707478362.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_23_Frame-1707478363.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <!-- Duplicate for infinite scroll -->
-          <img src="/images/imgi_36_Frame-1707478354.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_38_Frame-1707478352.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_40_Frame-1707478355.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_42_Frame-1707478360.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_44_Frame-1707478357.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_22_Frame-1707478362.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_23_Frame-1707478363.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-        </div>
-        <div class="marquee-vertical-col marquee-down">
-          <img src="/images/imgi_37_Frame-1707478351.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_39_Frame-1707478353.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_41_Frame-1707478359.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_43_Frame-1707478358.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_45_Frame-1707478356.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <img src="/images/imgi_25_Frame-1707478361.webp" alt="Plaquinhas" class="plaquinha-img"/>
-          <!-- Duplicate for infinite scroll -->
-          <img src="/images/imgi_37_Frame-1707478351.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_39_Frame-1707478353.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_41_Frame-1707478359.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_43_Frame-1707478358.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_45_Frame-1707478356.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-          <img src="/images/imgi_25_Frame-1707478361.webp" alt="Plaquinhas" class="plaquinha-img" aria-hidden="true"/>
-        </div>
+      <div class="solucao__img-wrap reveal" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <img src="/images/imgi_36_Frame-1707478354.webp" alt="Plaquinhas" style="width: 100%; border-radius: 12px;"/>
+        <img src="/images/imgi_37_Frame-1707478351.webp" alt="Plaquinhas" style="width: 100%; border-radius: 12px;"/>
+        <img src="/images/imgi_41_Frame-1707478359.webp" alt="Plaquinhas" style="width: 100%; border-radius: 12px;"/>
+        <img src="/images/imgi_42_Frame-1707478360.webp" alt="Plaquinhas" style="width: 100%; border-radius: 12px;"/>
       </div>
       <div class="solucao__content reveal">
         <h2 class="section__title">Cada conquista merece ser celebrada. Qual meta você quer quebrar <span class="highlight">primeiro?</span></h2>
-        <p>Enquanto alguns restaurantes lutam para sobreviver, nossos parceiros estão batendo metas de 100k, 200k, 500k, 1M e até 2M em faturamento. E celebramos cada conquista com uma plaquinha exclusiva que marca esse momento histórico.</p>
-        <p>Esses números não são sorte. São resultado de estratégia, execução e um time dedicado a fazer seu negócio crescer. A próxima plaquinha pode ser sua — qual meta você quer alcançar?</p>
-        <div class="plaquinhas__cta">
-          <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary pulse">
-            QUERO CONQUISTAR MINHA PLAQUINHA
-          </a>
-        </div>
+        <p>Enquanto alguns restaurantes lutam para sobreviver, nossos parceiros estão batendo metas de 100k, 200k, 500k, 1M e até 2M em faturamento. E celebramos cada conquista com uma plaquinha exclusiva que marca esse momento histórico. Esses números não são sorte. São resultado de estratégia, execução e um time dedicado a fazer seu negócio crescer. A próxima plaquinha pode ser sua — qual meta você quer alcançar?</p>
+        <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary pulse" style="margin-top: 1rem;">
+          QUERO CONQUISTAR MINHA PLAQUINHA
+        </a>
       </div>
     </div>
   </section>
@@ -349,28 +308,26 @@
     </div>
     <div class="marquee-wrap">
       <div class="marquee-track" id="marquee-track">
-        <img src="/images/imgi_50_Imagem-01.avif" alt="Galeria" />
-        <img src="/images/imgi_51_Imagem-2.avif" alt="Galeria" />
-        <img src="/images/imgi_52_Imagem-3.avif" alt="Galeria" />
-        <img src="/images/imgi_53_Imagem-4.avif" alt="Galeria" />
-        <img src="/images/imgi_54_Imagem-5.avif" alt="Galeria" />
-        <img src="/images/imgi_55_Imagem-6.avif" alt="Galeria" />
-        <img src="/images/imgi_46_Imagem-7.avif" alt="Galeria" />
-        <img src="/images/imgi_47_Imagem-8.avif" alt="Galeria" />
-        <img src="/images/imgi_48_Imagem-9.avif" alt="Galeria" />
-        <img src="/images/imgi_49_Imagem-10.avif" alt="Galeria" />
-        
-        <!-- Duplicates for infinite scroll -->
-        <img src="/images/imgi_50_Imagem-01.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_51_Imagem-2.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_52_Imagem-3.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_53_Imagem-4.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_54_Imagem-5.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_55_Imagem-6.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_46_Imagem-7.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_47_Imagem-8.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_48_Imagem-9.avif" alt="Galeria" aria-hidden="true" />
-        <img src="/images/imgi_49_Imagem-10.avif" alt="Galeria" aria-hidden="true" />
+        <img src="/images/imgi_36_Frame-1707478354.webp" alt="Cliente 100K" />
+        <img src="/images/imgi_37_Frame-1707478351.webp" alt="Cliente 100K" />
+        <img src="/images/imgi_38_Frame-1707478352.webp" alt="Cliente 100K" />
+        <img src="/images/imgi_39_Frame-1707478353.webp" alt="Cliente 100K" />
+        <img src="/images/imgi_40_Frame-1707478355.webp" alt="Cliente 100K" />
+        <img src="/images/imgi_41_Frame-1707478359.webp" alt="Cliente 500K" />
+        <img src="/images/imgi_42_Frame-1707478360.webp" alt="Cliente 500K" />
+        <img src="/images/imgi_43_Frame-1707478358.webp" alt="Cliente 500K" />
+        <img src="/images/imgi_44_Frame-1707478357.webp" alt="Cliente 500K" />
+        <img src="/images/imgi_45_Frame-1707478356.webp" alt="Cliente 500K" />
+        <img src="/images/imgi_36_Frame-1707478354.webp" alt="Cliente 100K" aria-hidden="true" />
+        <img src="/images/imgi_37_Frame-1707478351.webp" alt="Cliente 100K" aria-hidden="true" />
+        <img src="/images/imgi_38_Frame-1707478352.webp" alt="Cliente 100K" aria-hidden="true" />
+        <img src="/images/imgi_39_Frame-1707478353.webp" alt="Cliente 100K" aria-hidden="true" />
+        <img src="/images/imgi_40_Frame-1707478355.webp" alt="Cliente 100K" aria-hidden="true" />
+        <img src="/images/imgi_41_Frame-1707478359.webp" alt="Cliente 500K" aria-hidden="true" />
+        <img src="/images/imgi_42_Frame-1707478360.webp" alt="Cliente 500K" aria-hidden="true" />
+        <img src="/images/imgi_43_Frame-1707478358.webp" alt="Cliente 500K" aria-hidden="true" />
+        <img src="/images/imgi_44_Frame-1707478357.webp" alt="Cliente 500K" aria-hidden="true" />
+        <img src="/images/imgi_45_Frame-1707478356.webp" alt="Cliente 500K" aria-hidden="true" />
       </div>
     </div>
   </section>
@@ -438,56 +395,39 @@
   </section>
 
   <!-- ESTRATEGIAS COMPROVADAS (Vertical Cards) -->
-  <section class="section estrategias" id="estrategias">
-    <div class="container estrategias__inner">
-      <div class="estrategias__content reveal">
+  <section class="section estrategias" id="estrategias" style="padding-top: 0;">
+    <div class="container solucao__inner" style="align-items: flex-start;">
+      <div class="solucao__content reveal" style="position: sticky; top: 100px;">
         <h2 class="section__title">Estratégias Comprovadas para Alavancar seu Negócio e Bater Recordes de <span class="highlight">Faturamento</span></h2>
-        <p>Oferecemos soluções integradas para maximizar sua visibilidade, atrair clientes e impulsionar suas vendas.</p>
-        <div class="estrategias__cta">
-          <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary btn--xl pulse">
-            QUERO AUMENTAR MEU FATURAMENTO!
-          </a>
-        </div>
+        <p>oferecemos soluções integradas para maximizar sua visibilidade, atrair clientes e impulsionar suas vendas.</p>
+        <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary btn--xl pulse" style="margin-top: 2rem;">
+          QUERO AUMENTAR MEU FATURAMENTO!
+        </a>
       </div>
-      <div class="estrategias__list reveal">
+      <div class="solucao__img-wrap reveal" style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <div class="glass-card estrategia-card">
-          <div class="estrategia-card__icon-wrap">
-            <img src="/images/download (6).svg" alt="Icon" class="estrategia-card__icon" />
-          </div>
-          <h3 class="estrategia-card__title">Briefing Estratégico</h3>
+        <div class="glass-card dore-card" style="padding: 2rem;">
+          <h3 style="border-top: 3px solid var(--red); padding-top: 1rem;">Briefing Estratégico</h3>
           <p>Entendemos sobre o seu negócio inicialmente, através de perguntas estratégicas, em seguida realizamos o planejamento do investimento para alcançarmos os objetivos de bater recorde de faturamento.</p>
         </div>
         
-        <div class="glass-card estrategia-card">
-          <div class="estrategia-card__icon-wrap">
-            <img src="/images/download (7).svg" alt="Icon" class="estrategia-card__icon" />
-          </div>
-          <h3 class="estrategia-card__title">Tráfego Pago Segmentado</h3>
+        <div class="glass-card dore-card" style="padding: 2rem;">
+          <h3 style="border-top: 3px solid var(--red); padding-top: 1rem;">Tráfego Pago Segmentado</h3>
           <p>Criação e otimização de campanhas de anúncios pagos direcionados para atrair mais clientes potenciais para o seu restaurante ou delivery, aumentando a visibilidade online e alavancando as vendas.</p>
         </div>
 
-        <div class="glass-card estrategia-card">
-          <div class="estrategia-card__icon-wrap">
-            <img src="/images/download (8).svg" alt="Icon" class="estrategia-card__icon" />
-          </div>
-          <h3 class="estrategia-card__title">Mapeamos Oportunidades Locais</h3>
+        <div class="glass-card dore-card" style="padding: 2rem;">
+          <h3 style="border-top: 3px solid var(--red); padding-top: 1rem;">Mapeamos oportunidades de relações públicas locais</h3>
           <p>Implementação de estratégias de relações públicas buscando micro influencers, influencers e pessoas relevantes para a marca, em busca de visibilidade e reputação.</p>
         </div>
 
-        <div class="glass-card estrategia-card">
-          <div class="estrategia-card__icon-wrap">
-            <img src="/images/download (9).svg" alt="Icon" class="estrategia-card__icon" />
-          </div>
-          <h3 class="estrategia-card__title">Gestão de Performance</h3>
+        <div class="glass-card dore-card" style="padding: 2rem;">
+          <h3 style="border-top: 3px solid var(--red); padding-top: 1rem;">Gestão de Performance</h3>
           <p>O projeto será iniciado com as condições acordadas. O método é funcional e trabalhamos meta, google, google meu negócio, ifood, engenharia de cardápio digital, disparos de mensagens whatsapp/sms.</p>
         </div>
 
-        <div class="glass-card estrategia-card">
-          <div class="estrategia-card__icon-wrap">
-            <img src="/images/download (10).svg" alt="Icon" class="estrategia-card__icon" />
-          </div>
-          <h3 class="estrategia-card__title">Consultoria do Negócio</h3>
+        <div class="glass-card dore-card" style="padding: 2rem;">
+          <h3 style="border-top: 3px solid var(--red); padding-top: 1rem;">Consultoria do Negócio</h3>
           <p>Somos consultores do seu negócio, estamos aqui para lhe auxiliar em todos os pontos com nossas conexões a desenvolver o seu empreendimento e buscar o próximo nível. Conte conosco e suporte para conseguirmos desenvolver e bater recordes de faturamento constantemente.</p>
         </div>
 
@@ -512,10 +452,10 @@
           </div>
           <h3 class="text-green">É para você se...</h3>
           <ul class="checklist checklist--green">
-            <li><img src="/images/imgi_60_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Check" class="checklist__icon-img" /> <span>Tem um restaurante, delivery ou food truck</span></li>
-            <li><img src="/images/imgi_60_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Check" class="checklist__icon-img" /> <span>Quer aumentar seu faturamento com estratégia</span></li>
-            <li><img src="/images/imgi_60_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Check" class="checklist__icon-img" /> <span>Está cansado de "agências" que não trazem ROI</span></li>
-            <li><img src="/images/imgi_60_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Check" class="checklist__icon-img" /> <span>Busca previsibilidade de vendas todos os dias</span></li>
+            <li><span class="checklist__icon">✅</span> <span>Tem um restaurante, delivery ou food truck</span></li>
+            <li><span class="checklist__icon">✅</span> <span>Quer aumentar seu faturamento com estratégia</span></li>
+            <li><span class="checklist__icon">✅</span> <span>Está cansado de "agências" que não trazem ROI</span></li>
+            <li><span class="checklist__icon">✅</span> <span>Busca previsibilidade de vendas todos os dias</span></li>
           </ul>
         </div>
         
@@ -527,10 +467,10 @@
           </div>
           <h3 class="text-red">NÃO é para você se...</h3>
           <ul class="checklist checklist--red">
-            <li><img src="/images/imgi_57_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Cross" class="checklist__icon-img" /> <span>Busca uma "fórmula mágica" de enriquecimento</span></li>
-            <li><img src="/images/imgi_57_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Cross" class="checklist__icon-img" /> <span>Não está disposto a investir em tráfego e melhoria</span></li>
-            <li><img src="/images/imgi_57_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Cross" class="checklist__icon-img" /> <span>Acredita que marketing salva um produto ruim</span></li>
-            <li><img src="/images/imgi_57_eb4ed0bfd8cde75c3888ed9e7f259b0bd2817144a6ac0ee160828933f3bdef91.jpg" alt="Cross" class="checklist__icon-img" /> <span>Quer apenas "comprar seguidores" por vaidade</span></li>
+            <li><span class="checklist__icon">❌</span> <span>Busca uma "fórmula mágica" de enriquecimento</span></li>
+            <li><span class="checklist__icon">❌</span> <span>Não está disposto a investir em tráfego e melhoria</span></li>
+            <li><span class="checklist__icon">❌</span> <span>Acredita que marketing salva um produto ruim</span></li>
+            <li><span class="checklist__icon">❌</span> <span>Quer apenas "comprar seguidores" por vaidade</span></li>
           </ul>
         </div>
 
