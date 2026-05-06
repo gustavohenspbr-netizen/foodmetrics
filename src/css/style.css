@@ -512,7 +512,7 @@ a { text-decoration: none; color: inherit; }
 .dot.active { background: var(--red); width: 24px; border-radius: 4px; }
 
 /* Section subtitle */
-.section__sub { color: var(--muted); max-width: 560px; margin: -40px auto 64px; text-align: center; line-height: 1.7; }
+.section__sub { color: var(--muted); max-width: 560px; margin: 0 auto; text-align: center; line-height: 1.7; }
 
 /* ===== NUMEROS ===== */
 .numeros { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-top: 64px; }
