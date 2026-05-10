@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { Topbar } from "../components/Topbar";
 import { MOCK_CLIENT_USER } from "../lib/mockData";
-import { DashboardView } from "./views/client/DashboardView";
-import { AdsView } from "./views/client/AdsView";
-import { DeliveryView } from "./views/client/DeliveryView";
-import { MenuView } from "./views/client/MenuView";
-import { ClientCRMView } from "./views/client/ClientCRMView";
-import { ClientFinanceView } from "./views/client/ClientFinanceView";
-import { ClientReportsView } from "./views/client/ClientReportsView";
+import { DashboardView } from "../views/client/DashboardView";
+import { AdsView } from "../views/client/AdsView";
+import { DeliveryView } from "../views/client/DeliveryView";
+import { MenuView } from "../views/client/MenuView";
+import { ClientCRMView } from "../views/client/ClientCRMView";
+import { ClientFinanceView } from "../views/client/ClientFinanceView";
+import { ClientReportsView } from "../views/client/ClientReportsView";
 
 export function ClientDashboard() {
   const [active, setActive] = useState("dashboard");

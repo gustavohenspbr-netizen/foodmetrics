@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { Topbar } from "../components/Topbar";
-import { DashboardView } from "./views/admin/DashboardView";
-import { ClientsView } from "./views/admin/ClientsView";
-import { CRMView } from "./views/admin/CRMView";
-import { FinanceView } from "./views/admin/FinanceView";
-import { ReportsView } from "./views/admin/ReportsView";
-import { ScheduleView } from "./views/admin/ScheduleView";
+import { DashboardView } from "../views/admin/DashboardView";
+import { ClientsView } from "../views/admin/ClientsView";
+import { CRMView } from "../views/admin/CRMView";
+import { FinanceView } from "../views/admin/FinanceView";
+import { ReportsView } from "../views/admin/ReportsView";
+import { ScheduleView } from "../views/admin/ScheduleView";
 
 export function AdminPage() {
   const [active, setActive] = useState("dashboard");
