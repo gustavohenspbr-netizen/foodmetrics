@@ -1,5 +1,5 @@
 import React from "react";
-import { LogOut, Settings, LayoutDashboard, Users, FileText, Calendar, CreditCard, Briefcase, BarChart2, ShoppingBag } from "lucide-react";
+import { LogOut, Settings, LayoutDashboard, Users, FileText, Calendar, CreditCard, Briefcase, BarChart2, ShoppingBag, PieChart, ChefHat } from "lucide-react";
 
 export const ADMIN_NAV = [
   { id: "dashboard", icon: LayoutDashboard, label: "Visão Geral" },
@@ -12,12 +12,12 @@ export const ADMIN_NAV = [
 
 export const CLIENT_NAV = [
   { id: "dashboard", icon: LayoutDashboard, label: "Visão Geral" },
-  { id: "google", icon: BarChart2, label: "Google Ads" },
-  { id: "meta", icon: BarChart2, label: "Meta Ads" },
-  { id: "ifood", icon: ShoppingBag, label: "iFood" },
-  { id: "crm", icon: Briefcase, label: "CRM" },
-  { id: "finance", icon: CreditCard, label: "Financeiro" },
-  { id: "reports", icon: FileText, label: "Relatórios" },
+  { id: "ads", icon: BarChart2, label: "Marketing & Ads" },
+  { id: "delivery", icon: ShoppingBag, label: "Op. Delivery" },
+  { id: "menu", icon: ChefHat, label: "Menu Inteligente" },
+  { id: "crm", icon: Users, label: "Base de Clientes" },
+  { id: "finance", icon: CreditCard, label: "Faturas Agência" },
+  { id: "reports", icon: FileText, label: "Documentos" },
 ];
 
 interface SidebarProps {
@@ -70,7 +70,7 @@ export function Sidebar({ type, active, setActive, pendingCount = 0, clientInfo 
 
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
         <p className="px-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
-          {type === "admin" ? "Menu Principal" : "Navegação"}
+          {type === "admin" ? "Menu Principal" : "Ferramentas do Restaurante"}
         </p>
         {navItems.map(({ id, icon: Icon, label }) => (
           <button key={id} onClick={() => setActive(id)}

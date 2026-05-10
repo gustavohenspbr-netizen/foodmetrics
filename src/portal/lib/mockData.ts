@@ -1,289 +1,69 @@
-// =============================================
-// MOCK DATA — substituir por chamadas Supabase/API
-// =============================================
-
-export const MOCK_ADMIN = {
-  id: "admin-1",
-  name: "Angelo Garcia",
-  email: "admin@foodmetricas.com.br",
-  role: "admin" as const,
-  avatar: "AG",
+export const MOCK_CLIENT_USER = {
+  restaurant: "Burger King (Franquia SP)",
+  type: "Fast Food Premium",
+  avatar: "BK",
+  color: "#ff8732"
 };
 
 export const MOCK_CLIENTS = [
-  {
-    id: "c1",
-    name: "Burger Kings SP",
-    email: "gestor@burgerkingssp.com.br",
-    restaurant: "Burger Kings",
-    type: "Hamburgueria",
-    status: "active" as const,
-    avatar: "BK",
-    color: "#f59e0b",
-    joinedAt: "2024-03-15",
-    monthlyBudget: 5000,
-    googleSpend: 2100,
-    metaSpend: 1800,
-    ifoodRating: 4.7,
-    lastReport: "2025-05-01",
-  },
-  {
-    id: "c2",
-    name: "Pizza Nostra",
-    email: "contato@pizzanostra.com.br",
-    restaurant: "Pizza Nostra",
-    type: "Pizzaria",
-    status: "active" as const,
-    avatar: "PN",
-    color: "#e01c1c",
-    joinedAt: "2024-05-20",
-    monthlyBudget: 3500,
-    googleSpend: 1400,
-    metaSpend: 1200,
-    ifoodRating: 4.9,
-    lastReport: "2025-05-01",
-  },
-  {
-    id: "c3",
-    name: "Pastiannes Burger",
-    email: "admin@pastiannes.com.br",
-    restaurant: "Pastiannes Burger",
-    type: "Hamburgueria",
-    status: "active" as const,
-    avatar: "PA",
-    color: "#3b82f6",
-    joinedAt: "2024-07-10",
-    monthlyBudget: 4000,
-    googleSpend: 1600,
-    metaSpend: 1500,
-    ifoodRating: 4.6,
-    lastReport: "2025-04-28",
-  },
-  {
-    id: "c4",
-    name: "Cabrón Tacos",
-    email: "marketing@cabrontacos.com.br",
-    restaurant: "Cabrón Tacos",
-    type: "Mexicano",
-    status: "pending" as const,
-    avatar: "CT",
-    color: "#22c55e",
-    joinedAt: "2025-05-08",
-    monthlyBudget: 2000,
-    googleSpend: 0,
-    metaSpend: 0,
-    ifoodRating: 0,
-    lastReport: null,
-  },
-  {
-    id: "c5",
-    name: "Beleza Pizza",
-    email: "contato@belezapizza.com.br",
-    restaurant: "Beleza Pizza",
-    type: "Pizzaria",
-    status: "pending" as const,
-    avatar: "BP",
-    color: "#a855f7",
-    joinedAt: "2025-05-09",
-    monthlyBudget: 3000,
-    googleSpend: 0,
-    metaSpend: 0,
-    ifoodRating: 0,
-    lastReport: null,
-  },
-];
-
-// Client logged in (mock — em produção vem do JWT/Supabase)
-export const MOCK_CLIENT_USER = MOCK_CLIENTS[0];
-
-export const MOCK_GOOGLE_CAMPAIGNS = [
-  {
-    id: "g1",
-    name: "Busca — Hamburgueria SP",
-    status: "active",
-    budget: 80,
-    spend: 68.4,
-    impressions: 12400,
-    clicks: 843,
-    ctr: 6.8,
-    cpc: 0.81,
-    conversions: 64,
-    cpa: 10.69,
-    roas: 4.2,
-  },
-  {
-    id: "g2",
-    name: "Performance Max — Delivery",
-    status: "active",
-    budget: 60,
-    spend: 52.1,
-    impressions: 9800,
-    clicks: 612,
-    ctr: 6.2,
-    cpc: 0.85,
-    conversions: 48,
-    cpa: 10.85,
-    roas: 3.8,
-  },
-  {
-    id: "g3",
-    name: "Display — Retargeting",
-    status: "paused",
-    budget: 30,
-    spend: 0,
-    impressions: 0,
-    clicks: 0,
-    ctr: 0,
-    cpc: 0,
-    conversions: 0,
-    cpa: 0,
-    roas: 0,
-  },
-];
-
-export const MOCK_META_CAMPAIGNS = [
-  {
-    id: "m1",
-    name: "Tráfego — Cardápio Digital",
-    status: "active",
-    budget: 50,
-    spend: 44.2,
-    reach: 18600,
-    impressions: 31200,
-    clicks: 1240,
-    ctr: 3.97,
-    cpc: 0.36,
-    results: 98,
-    costPerResult: 0.45,
-    objective: "LINK_CLICKS",
-  },
-  {
-    id: "m2",
-    name: "Conversão — Pedido Online",
-    status: "active",
-    budget: 70,
-    spend: 61.8,
-    reach: 12400,
-    impressions: 24800,
-    clicks: 890,
-    ctr: 3.59,
-    cpc: 0.69,
-    results: 72,
-    costPerResult: 0.86,
-    objective: "CONVERSIONS",
-  },
-  {
-    id: "m3",
-    name: "Awareness — Marca Local",
-    status: "active",
-    budget: 40,
-    spend: 35.5,
-    reach: 28000,
-    impressions: 52000,
-    clicks: 620,
-    ctr: 1.19,
-    cpc: 0.57,
-    results: 1800,
-    costPerResult: 0.02,
-    objective: "REACH",
-  },
-];
-
-export const MOCK_IFOOD_DATA = {
-  rating: 4.7,
-  totalReviews: 1842,
-  positionCategory: 3,
-  positionNearby: 8,
-  orders: {
-    today: 34,
-    week: 218,
-    month: 847,
-  },
-  revenue: {
-    today: 2890,
-    week: 18640,
-    month: 72300,
-  },
-  ticketAvg: {
-    today: 85,
-    week: 85.5,
-    month: 85.4,
-  },
-  cancelRate: 2.1,
-  acceptRate: 97.9,
-  topItems: [
-    { name: "X-Burgão Duplo", orders: 312, revenue: 11232 },
-    { name: "Combo Família", orders: 198, revenue: 13662 },
-    { name: "X-Bacon Especial", orders: 187, revenue: 6358 },
-    { name: "Batata Frita Grande", orders: 524, revenue: 5764 },
-    { name: "Refrigerante 600ml", orders: 680, revenue: 4080 },
-  ],
-};
-
-export const MOCK_MONTHLY_SPEND = [
-  { month: "Nov", google: 1800, meta: 1400, total: 3200 },
-  { month: "Dez", google: 2100, meta: 1600, total: 3700 },
-  { month: "Jan", google: 1950, meta: 1500, total: 3450 },
-  { month: "Fev", google: 2000, meta: 1650, total: 3650 },
-  { month: "Mar", google: 2200, meta: 1750, total: 3950 },
-  { month: "Abr", google: 2050, meta: 1700, total: 3750 },
-  { month: "Mai", google: 2100, meta: 1800, total: 3900 },
+  { id: "1", restaurant: "Burger King (SP)", email: "contato@bksp.com.br", type: "Fast Food", googleSpend: 15400, metaSpend: 8200, ifoodRating: 4.8, status: "active", avatar: "BK", color: "#ff8732" },
+  { id: "2", restaurant: "Outback Steakhouse", email: "marketing@outback.com", type: "Casual Dining", googleSpend: 22000, metaSpend: 14500, ifoodRating: 4.9, status: "active", avatar: "OB", color: "#e01c1c" },
+  { id: "3", restaurant: "Madero Prime", email: "gerencia@madero.com", type: "Premium Burger", googleSpend: 18500, metaSpend: 12000, ifoodRating: 4.7, status: "active", avatar: "MD", color: "#000000" },
+  { id: "4", restaurant: "Pizza Hut (Moema)", email: "moema@pizzahut.com.br", type: "Pizzaria", googleSpend: 9200, metaSpend: 5100, ifoodRating: 4.6, status: "pending", avatar: "PH", color: "#c8102e" },
+  { id: "5", restaurant: "Coco Bambu", email: "eventos@cocobambu.com", type: "Seafood", googleSpend: 31000, metaSpend: 25000, ifoodRating: 4.8, status: "active", avatar: "CB", color: "#bfa15f" },
+  { id: "6", restaurant: "Paris 6", email: "admin@paris6.com.br", type: "Bistrô", googleSpend: 12000, metaSpend: 18000, ifoodRating: 4.5, status: "pending", avatar: "P6", color: "#54301a" },
 ];
 
 export const MOCK_REPORTS = [
-  {
-    id: "r1",
-    title: "Relatório Mensal — Abril 2025",
-    period: "01/04/2025 – 30/04/2025",
-    sentAt: "2025-05-01T09:00:00",
-    readAt: "2025-05-01T10:32:00",
-    type: "monthly",
-    status: "read",
-    clients: ["c1", "c2", "c3"],
-  },
-  {
-    id: "r2",
-    title: "Relatório Mensal — Março 2025",
-    period: "01/03/2025 – 31/03/2025",
-    sentAt: "2025-04-01T09:00:00",
-    readAt: "2025-04-01T14:11:00",
-    type: "monthly",
-    status: "read",
-    clients: ["c1", "c2", "c3"],
-  },
-  {
-    id: "r3",
-    title: "Relatório Semanal — Semana 18",
-    period: "28/04/2025 – 04/05/2025",
-    sentAt: "2025-05-05T08:00:00",
-    readAt: null,
-    type: "weekly",
-    status: "sent",
-    clients: ["c1"],
-  },
+  { id: "r1", title: "Fechamento Mensal - Abril 2025", period: "01/04 a 30/04", status: "read", date: "02/05/2025" },
+  { id: "r2", title: "Fechamento Mensal - Março 2025", period: "01/03 a 31/03", status: "read", date: "03/04/2025" },
+  { id: "r3", title: "Relatório de Performance - Dia das Mães", period: "Especial", status: "sent", date: "15/05/2025" },
 ];
 
-export const MOCK_SCHEDULES = [
-  {
-    id: "s1",
-    name: "Relatório Mensal — Todos os clientes",
-    type: "monthly",
-    day: 1,
-    hour: "09:00",
-    channel: "email",
-    clients: "all",
-    active: true,
-    nextRun: "2025-06-01T09:00:00",
-  },
-  {
-    id: "s2",
-    name: "Relatório Semanal — Clientes Premium",
-    type: "weekly",
-    dayOfWeek: "monday",
-    hour: "08:00",
-    channel: "whatsapp",
-    clients: ["c1", "c2"],
-    active: true,
-    nextRun: "2025-05-12T08:00:00",
-  },
+export const MOCK_GOOGLE_CAMPAIGNS = [
+  { id: "g1", name: "[Pesquisa] Delivery Fundo de Funil", status: "Ativa", spend: 4500, conversions: 1250, cpa: 3.60, roas: 12.5 },
+  { id: "g2", name: "[Performance Max] Almoço Executivo", status: "Ativa", spend: 2800, conversions: 840, cpa: 3.33, roas: 15.2 },
+  { id: "g3", name: "[YouTube] Brand Awareness", status: "Pausada", spend: 1200, conversions: 45, cpa: 26.66, roas: 2.1 },
+];
+
+export const MOCK_META_CAMPAIGNS = [
+  { id: "m1", name: "[Feed/Stories] Oferta de Domingo", status: "Ativa", spend: 2100, reach: 145000, clicks: 8400, ctr: 5.7 },
+  { id: "m2", name: "[Reels] Vídeo Bastidores Cozinha", status: "Ativa", spend: 1500, reach: 220000, clicks: 12000, ctr: 5.4 },
+  { id: "m3", name: "[Carrossel] Cardápio de Inverno", status: "Ativa", spend: 3200, reach: 98000, clicks: 5100, ctr: 5.2 },
+];
+
+export const MOCK_IFOOD_DATA = {
+  rating: 4.8,
+  orders: { today: 142, week: 984, month: 4120 },
+  revenue: { today: 8520, week: 62400, month: 245000 },
+  cancellations: 1.2,
+};
+
+export const MOCK_MONTHLY_SPEND = [
+  { month: "Jan", google: 12000, meta: 8000 },
+  { month: "Fev", google: 13500, meta: 9200 },
+  { month: "Mar", google: 11000, meta: 8500 },
+  { month: "Abr", google: 15400, meta: 11200 },
+  { month: "Mai", google: 18200, meta: 14500 },
+];
+
+export const MOCK_CRM_LEADS = [
+  { id: "l1", name: "La Guapa (Vila Madalena)", value: 5000, status: "lead", date: "10/05/2025" },
+  { id: "l2", name: "Patties Burger", value: 8500, status: "contacted", date: "09/05/2025" },
+  { id: "l3", name: "Bacio di Latte", value: 12000, status: "proposal", date: "08/05/2025" },
+  { id: "l4", name: "Cabana Burger", value: 10000, status: "negotiation", date: "07/05/2025" },
+  { id: "l5", name: "Fogo de Chão", value: 20000, status: "won", date: "05/05/2025" },
+];
+
+export const MOCK_FINANCE_INVOICES = [
+  { id: "inv1", client: "Burger King (SP)", description: "Mensalidade Gestão Tráfego", amount: 4500, status: "paid", dueDate: "05/05/2025" },
+  { id: "inv2", client: "Outback Steakhouse", description: "Mensalidade Gestão Tráfego + CRM", amount: 7500, status: "pending", dueDate: "15/05/2025" },
+  { id: "inv3", client: "Madero Prime", description: "Setup de Infraestrutura de Dados", amount: 3000, status: "overdue", dueDate: "01/05/2025" },
+  { id: "inv4", client: "Coco Bambu", description: "Consultoria Trimestral", amount: 15000, status: "paid", dueDate: "05/05/2025" },
+];
+
+export const MOCK_SCHEDULE_EVENTS = [
+  { id: "e1", title: "Reunião de Onboarding - La Guapa", time: "10:00 - 11:00", type: "onboarding", date: "12/05/2025" },
+  { id: "e2", title: "Apresentação Relatório Abril - Outback", time: "14:00 - 15:00", type: "report", date: "12/05/2025" },
+  { id: "e3", title: "Call Estratégica - Bacio di Latte", time: "16:30 - 17:30", type: "strategy", date: "13/05/2025" },
 ];
