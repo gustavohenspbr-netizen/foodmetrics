@@ -43,8 +43,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: "#080810" }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-transparent">
 
       {/* Background glow */}
       <div style={{
