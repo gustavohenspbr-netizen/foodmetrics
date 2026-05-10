@@ -42,25 +42,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120] p-6 transition-colors duration-300 font-sans">
 
       <div className="w-full max-w-md animate-fadeIn">
         {/* Logo */}
         <div className="text-center mb-10">
-          <img src="/images/imgi_56_Ativo-1.svg" alt="Food Métricas" className="h-12 mx-auto mb-6 drop-shadow-sm" />
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Bem-vindo de volta</h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <img src="/images/imgi_56_Ativo-1.svg" alt="Food Métricas" className="h-10 mx-auto mb-8 drop-shadow-sm" />
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">Bem-vindo de volta</h1>
+          <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
             Acesse seu painel exclusivo
           </p>
         </div>
 
         {/* Form Card */}
         <form onSubmit={handleLogin}
-          className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700 space-y-6">
+          className="bg-white dark:bg-[#0F172A] rounded-3xl p-10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-slate-200/60 dark:border-slate-800/60 space-y-7">
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-              E-mail
+          <div className="space-y-2.5">
+            <label className="block text-[13px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+              E-mail corporativo
             </label>
             <input
               type="email"
@@ -68,12 +68,12 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com.br"
               required
-              className="w-full rounded-xl px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-slate-400"
+              className="w-full rounded-xl px-5 py-3.5 bg-[#F8FAFC] dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800 text-[15px] font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#e01c1c]/20 focus:border-[#e01c1c] transition-all placeholder:text-slate-400"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <div className="space-y-2.5">
+            <label className="block text-[13px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               Senha
             </label>
             <input
@@ -82,12 +82,12 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full rounded-xl px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all placeholder:text-slate-400"
+              className="w-full rounded-xl px-5 py-3.5 bg-[#F8FAFC] dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800 text-[15px] font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#e01c1c]/20 focus:border-[#e01c1c] transition-all placeholder:text-slate-400"
             />
           </div>
 
           {error && (
-            <div className="rounded-xl px-4 py-3 text-sm text-center bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 font-medium">
+            <div className="rounded-xl px-5 py-4 text-[14px] text-center bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 font-bold">
               {error}
             </div>
           )}
@@ -95,25 +95,25 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 shadow-md shadow-red-500/20"
+            className="w-full py-4 rounded-xl font-bold text-[15px] text-white transition-all hover:opacity-90 disabled:opacity-50 shadow-[0_4px_14px_rgba(224,28,28,0.3)] mt-2"
             style={{ backgroundColor: "#e01c1c" }}>
             {loading ? "Entrando..." : "Acessar Painel"}
           </button>
 
           {/* Demo hint */}
-          <div className="rounded-xl px-4 py-4 mt-6 text-xs space-y-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-medium">
-            <p className="flex justify-between">
+          <div className="rounded-xl px-5 py-4 mt-8 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 font-medium text-[13px]">
+            <p className="flex justify-between items-center">
               <span><span className="font-bold text-slate-700 dark:text-slate-300">Admin:</span> admin@...</span>
-              <span>admin123</span>
+              <span className="font-mono text-[11px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">admin123</span>
             </p>
-            <p className="flex justify-between">
+            <p className="flex justify-between items-center">
               <span><span className="font-bold text-slate-700 dark:text-slate-300">Cliente:</span> cliente@...</span>
-              <span>cliente123</span>
+              <span className="font-mono text-[11px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">cliente123</span>
             </p>
           </div>
         </form>
 
-        <p className="text-center mt-8 text-sm text-slate-400 dark:text-slate-500">
+        <p className="text-center mt-10 text-[13px] font-medium text-slate-400 dark:text-slate-500">
           © 2025 Food Métricas. Todos os direitos reservados.
         </p>
       </div>
