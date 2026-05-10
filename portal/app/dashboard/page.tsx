@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   LayoutDashboard, BarChart2, ShoppingBag, FileText,
   LogOut, TrendingUp, TrendingDown, DollarSign, Eye,
-  MousePointer, Star, Package, Bell, CreditCard, Briefcase
+  MousePointer, Star, Package, Bell, CreditCard, Briefcase,
+  Sun, Moon, Search
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -29,10 +31,10 @@ const NAV = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass rounded-xl p-3 text-xs" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
-        <p className="font-semibold text-white mb-1">{label}</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs shadow-lg">
+        <p className="font-bold text-slate-900 dark:text-white mb-1">{label}</p>
         {payload.map((p: any) => (
-          <p key={p.name} style={{ color: p.color }}>
+          <p key={p.name} style={{ color: p.color }} className="font-medium">
             {p.name}: R$ {p.value.toLocaleString("pt-BR")}
           </p>
         ))}
@@ -44,17 +46,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 function MetricCard({ label, value, sub, up, icon: Icon, color }: any) {
   return (
-    <div className="glass rounded-2xl p-5">
+    <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: color + "22" }}>
-          <Icon size={16} style={{ color }} />
-        </div>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</span>
+        <Icon size={18} style={{ color }} />
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
+      <p className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{value}</p>
       {sub && (
-        <p className={`text-xs mt-1 flex items-center gap-1 ${up ? "metric-up" : "metric-down"}`}>
-          {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {sub}
+        <p className={`text-xs mt-1.5 flex items-center gap-1 font-bold ${up ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+          {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {sub}
         </p>
       )}
     </div>
@@ -63,10 +63,13 @@ function MetricCard({ label, value, sub, up, icon: Icon, color }: any) {
 
 export default function ClientDashboard() {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [active, setActive] = useState("dashboard");
+  const [mounted, setMounted] = useState(false);
   const client = MOCK_CLIENT_USER;
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       const role = sessionStorage.getItem("fm_role");
       if (!role) router.push("/login");
@@ -84,66 +87,82 @@ export default function ClientDashboard() {
   const totalReach = MOCK_META_CAMPAIGNS.reduce((s, c) => s + c.reach, 0);
 
   return (
-    <div className="flex min-h-screen bg-transparent">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-50">
 
       {/* SIDEBAR */}
-      <aside className="w-60 flex-shrink-0 flex flex-col glass"
-        style={{ borderRight: "1px solid rgba(255,255,255,0.06)", borderTop: "none", borderLeft: "none", borderBottom: "none", borderRadius: 0 }}>
-        <div className="p-5 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <img src="/images/imgi_56_Ativo-1.svg" alt="Food Métricas" className="h-7 mb-4" />
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
-              style={{ background: client.color + "22", color: client.color }}>
+      <aside className="w-64 flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <img src="/images/imgi_56_Ativo-1.svg" alt="Food Métricas" className="h-7 mb-6" />
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+              style={{ background: client.color + "20", color: client.color }}>
               {client.avatar}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">{client.restaurant}</p>
-              <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{client.type}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{client.restaurant}</p>
+              <p className="text-xs truncate text-slate-500 dark:text-slate-400 font-medium">{client.type}</p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-4 space-y-1">
           {NAV.map(({ id, icon: Icon, label }) => (
             <button key={id} onClick={() => setActive(id)}
-              className={`sidebar-link w-full text-left ${active === id ? "active" : ""}`}>
-              <Icon size={17} /> {label}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                active === id 
+                  ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" 
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}>
+              <Icon size={18} className={active === id ? "text-red-600 dark:text-red-500" : ""} />
+              {label}
             </button>
           ))}
         </nav>
 
-        <div className="p-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <button onClick={logout} className="sidebar-link w-full text-left">
-            <LogOut size={17} /> Sair
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+          <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
+            <LogOut size={18} /> Sair
           </button>
         </div>
       </aside>
 
       {/* MAIN */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto flex flex-col relative">
 
         {/* Topbar */}
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-10"
-          style={{ background: "rgba(8,8,16,0.9)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
           <div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
               {NAV.find(n => n.id === active)?.label}
             </h1>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {client.restaurant} · Maio 2025
             </p>
           </div>
-          <button className="p-2 rounded-xl glass">
-            <Bell size={18} style={{ color: "rgba(255,255,255,0.5)" }} />
-          </button>
+          <div className="flex items-center gap-4">
+            
+            {/* Theme Toggle */}
+            {mounted && (
+              <button 
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+              >
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            )}
+
+            <button className="relative p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+              <Bell size={18} />
+            </button>
+          </div>
         </header>
 
-        <div className="p-8 space-y-8">
+        <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
 
           {/* === OVERVIEW === */}
           {active === "dashboard" && (
             <>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <MetricCard label="Gasto Google" value={`R$ ${totalGoogleSpend.toFixed(0)}`} sub="+12% vs mês ant." up icon={DollarSign} color="#4285f4" />
                 <MetricCard label="Gasto Meta" value={`R$ ${totalMetaSpend.toFixed(0)}`} sub="+8% vs mês ant." up icon={DollarSign} color="#1877f2" />
                 <MetricCard label="Conversões Google" value={totalConversions} sub="+22% vs mês ant." up icon={MousePointer} color="#22c55e" />
@@ -151,8 +170,8 @@ export default function ClientDashboard() {
               </div>
 
               {/* Spend chart */}
-              <div className="glass rounded-2xl p-6">
-                <h2 className="font-bold text-white mb-6">Investimento Mensal</h2>
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+                <h2 className="font-bold text-slate-900 dark:text-white mb-6">Investimento Mensal</h2>
                 <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={MOCK_MONTHLY_SPEND}>
                     <defs>
@@ -165,231 +184,41 @@ export default function ClientDashboard() {
                         <stop offset="95%" stopColor="#1877f2" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.5} vertical={false} />
+                    <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="google" name="Google" stroke="#4285f4" strokeWidth={2} fill="url(#gGoogle)" />
-                    <Area type="monotone" dataKey="meta" name="Meta" stroke="#1877f2" strokeWidth={2} fill="url(#gMeta)" />
+                    <Area type="monotone" dataKey="google" name="Google" stroke="#4285f4" strokeWidth={3} fill="url(#gGoogle)" />
+                    <Area type="monotone" dataKey="meta" name="Meta" stroke="#1877f2" strokeWidth={3} fill="url(#gMeta)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
 
               {/* iFood quick stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="glass rounded-2xl p-5 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: "rgba(234,67,53,0.12)" }}>🛵</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-5 flex items-center gap-4 border border-slate-200 dark:border-slate-800 shadow-sm border-l-4 border-l-red-500">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-red-50 dark:bg-red-500/10">🛵</div>
                   <div>
-                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Pedidos hoje</p>
-                    <p className="text-2xl font-bold text-white">{MOCK_IFOOD_DATA.orders.today}</p>
+                    <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Pedidos hoje</p>
+                    <p className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">{MOCK_IFOOD_DATA.orders.today}</p>
                   </div>
                 </div>
-                <div className="glass rounded-2xl p-5 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: "rgba(251,191,36,0.12)" }}>⭐</div>
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-5 flex items-center gap-4 border border-slate-200 dark:border-slate-800 shadow-sm border-l-4 border-l-amber-400">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-amber-50 dark:bg-amber-500/10">⭐</div>
                   <div>
-                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Avaliação iFood</p>
-                    <p className="text-2xl font-bold text-white">{MOCK_IFOOD_DATA.rating}</p>
+                    <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Avaliação iFood</p>
+                    <p className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">{MOCK_IFOOD_DATA.rating}</p>
                   </div>
                 </div>
-                <div className="glass rounded-2xl p-5 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: "rgba(34,197,94,0.12)" }}>💰</div>
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-5 flex items-center gap-4 border border-slate-200 dark:border-slate-800 shadow-sm border-l-4 border-l-green-500">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-green-50 dark:bg-green-500/10">💰</div>
                   <div>
-                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Receita hoje</p>
-                    <p className="text-2xl font-bold text-white">R$ {MOCK_IFOOD_DATA.revenue.today.toLocaleString("pt-BR")}</p>
+                    <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Receita hoje</p>
+                    <p className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">R$ {MOCK_IFOOD_DATA.revenue.today.toLocaleString("pt-BR")}</p>
                   </div>
                 </div>
               </div>
             </>
-          )}
-
-          {/* === GOOGLE ADS === */}
-          {active === "google" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-4 gap-4">
-                {[
-                  { label: "Gasto Total", value: `R$ ${totalGoogleSpend.toFixed(0)}`, color: "#4285f4" },
-                  { label: "Conversões", value: totalConversions, color: "#22c55e" },
-                  { label: "Cliques", value: MOCK_GOOGLE_CAMPAIGNS.reduce((s,c)=>s+c.clicks,0).toLocaleString(), color: "#fbbf24" },
-                  { label: "ROAS Médio", value: "4.0x", color: "#a855f7" },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="glass rounded-2xl p-5">
-                    <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</p>
-                    <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <h2 className="font-bold text-white">Campanhas Ativas</h2>
-                </div>
-                <table className="w-full">
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      {["Campanha", "Status", "Gasto", "Cliques", "CTR", "Conversões", "ROAS"].map(h => (
-                        <th key={h} className="px-5 py-3 text-left text-xs font-medium" style={{ color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {MOCK_GOOGLE_CAMPAIGNS.map(c => (
-                      <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                        <td className="px-5 py-4 text-sm font-medium text-white">{c.name}</td>
-                        <td className="px-5 py-4">
-                          <span className={`text-xs px-2 py-1 rounded-full ${c.status === "active" ? "badge-green" : "badge-muted"}`}>
-                            {c.status === "active" ? "Ativo" : "Pausado"}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-sm text-white">R$ {c.spend.toFixed(2)}</td>
-                        <td className="px-5 py-4 text-sm text-white">{c.clicks.toLocaleString()}</td>
-                        <td className="px-5 py-4 text-sm text-white">{c.ctr}%</td>
-                        <td className="px-5 py-4 text-sm text-white">{c.conversions}</td>
-                        <td className="px-5 py-4 text-sm font-bold" style={{ color: "#22c55e" }}>{c.roas}x</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* === META ADS === */}
-          {active === "meta" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-4 gap-4">
-                {[
-                  { label: "Gasto Total", value: `R$ ${totalMetaSpend.toFixed(0)}`, color: "#1877f2" },
-                  { label: "Alcance Total", value: totalReach.toLocaleString(), color: "#a855f7" },
-                  { label: "Cliques", value: MOCK_META_CAMPAIGNS.reduce((s,c)=>s+c.clicks,0).toLocaleString(), color: "#fbbf24" },
-                  { label: "Resultados", value: MOCK_META_CAMPAIGNS.reduce((s,c)=>s+c.results,0).toLocaleString(), color: "#22c55e" },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="glass rounded-2xl p-5">
-                    <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</p>
-                    <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <h2 className="font-bold text-white">Campanhas Ativas</h2>
-                </div>
-                <table className="w-full">
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      {["Campanha", "Objetivo", "Gasto", "Alcance", "Cliques", "Resultados", "Custo/Result."].map(h => (
-                        <th key={h} className="px-5 py-3 text-left text-xs font-medium" style={{ color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {MOCK_META_CAMPAIGNS.map(c => (
-                      <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                        <td className="px-5 py-4 text-sm font-medium text-white">{c.name}</td>
-                        <td className="px-5 py-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{c.objective.replace("_"," ")}</td>
-                        <td className="px-5 py-4 text-sm text-white">R$ {c.spend.toFixed(2)}</td>
-                        <td className="px-5 py-4 text-sm text-white">{c.reach.toLocaleString()}</td>
-                        <td className="px-5 py-4 text-sm text-white">{c.clicks.toLocaleString()}</td>
-                        <td className="px-5 py-4 text-sm text-white">{c.results.toLocaleString()}</td>
-                        <td className="px-5 py-4 text-sm font-bold" style={{ color: "#22c55e" }}>R$ {c.costPerResult.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* === IFOOD === */}
-          {active === "ifood" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-4 gap-4">
-                <MetricCard label="Avaliação" value={`⭐ ${MOCK_IFOOD_DATA.rating}`} sub={`${MOCK_IFOOD_DATA.totalReviews} avaliações`} up icon={Star} color="#fbbf24" />
-                <MetricCard label="Pedidos (mês)" value={MOCK_IFOOD_DATA.orders.month.toLocaleString()} sub="+14% vs mês ant." up icon={Package} color="#e01c1c" />
-                <MetricCard label="Receita (mês)" value={`R$ ${MOCK_IFOOD_DATA.revenue.month.toLocaleString("pt-BR")}`} sub="+18% vs mês ant." up icon={DollarSign} color="#22c55e" />
-                <MetricCard label="Ticket Médio" value={`R$ ${MOCK_IFOOD_DATA.ticketAvg.month.toFixed(2)}`} sub="+3% vs mês ant." up icon={TrendingUp} color="#a855f7" />
-              </div>
-              <div className="glass rounded-2xl p-6">
-                <h2 className="font-bold text-white mb-4">Itens Mais Pedidos</h2>
-                <div className="space-y-3">
-                  {MOCK_IFOOD_DATA.topItems.map((item, i) => (
-                    <div key={item.name} className="flex items-center justify-between p-4 rounded-xl"
-                      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold w-6" style={{ color: "rgba(255,255,255,0.2)" }}>#{i+1}</span>
-                        <p className="text-sm font-medium text-white">{item.name}</p>
-                      </div>
-                      <div className="flex gap-6 text-right">
-                        <div>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Pedidos</p>
-                          <p className="text-sm font-bold text-white">{item.orders}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Receita</p>
-                          <p className="text-sm font-bold" style={{ color: "#22c55e" }}>R$ {item.revenue.toLocaleString("pt-BR")}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* === REPORTS === */}
-          {active === "reports" && (
-            <div className="space-y-4">
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Relatórios enviados pela Food Métricas</p>
-              {MOCK_REPORTS.map(r => (
-                <div key={r.id} className="glass rounded-2xl p-6 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(59,130,246,0.12)" }}>
-                      <FileText size={20} style={{ color: "#60a5fa" }} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white">{r.title}</h3>
-                      <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>{r.period}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${r.status === "read" ? "badge-green" : "badge-blue"}`}>
-                      {r.status === "read" ? "✓ Lido" : "Novo"}
-                    </span>
-                    <button className="px-4 py-2 rounded-xl text-xs font-bold glass glass-hover text-white">
-                      ↓ Baixar PDF
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* === CRM === */}
-          {active === "crm" && (
-            <div className="glass rounded-2xl p-10 text-center space-y-4" style={{ border: "1px dashed rgba(255,255,255,0.15)" }}>
-              <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background: "rgba(245,158,11,0.1)" }}>
-                <Briefcase size={32} style={{ color: "#fbbf24" }} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white mb-2">Seu CRM de Vendas (Em Breve)</h2>
-                <p className="text-sm max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  Acompanhe os leads gerados pelas campanhas em tempo real, gerencie o status de cada atendimento e calcule sua taxa de conversão comercial.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* === FINANCEIRO === */}
-          {active === "finance" && (
-            <div className="glass rounded-2xl p-10 text-center space-y-4" style={{ border: "1px dashed rgba(255,255,255,0.15)" }}>
-              <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)" }}>
-                <CreditCard size={32} style={{ color: "#4ade80" }} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white mb-2">Seu Financeiro (Em Breve)</h2>
-                <p className="text-sm max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  Visualize faturas de assessoria, notas fiscais, relatórios de custo por aquisição (CAC) e retornos sobre investimento global (ROI).
-                </p>
-              </div>
-            </div>
           )}
 
         </div>
