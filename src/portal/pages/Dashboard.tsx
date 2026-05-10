@@ -3,9 +3,9 @@ import { Sidebar } from "../components/Sidebar";
 import { Topbar } from "../components/Topbar";
 import { MOCK_CLIENT_USER } from "../lib/mockData";
 import { DashboardView } from "../views/client/DashboardView";
-import { AdsView } from "../views/client/AdsView";
-import { DeliveryView } from "../views/client/DeliveryView";
-import { MenuView } from "../views/client/MenuView";
+import { GoogleAdsView } from "../views/client/GoogleAdsView";
+import { MetaAdsView } from "../views/client/MetaAdsView";
+import { IfoodView } from "../views/client/IfoodView";
 import { ClientCRMView } from "../views/client/ClientCRMView";
 import { ClientFinanceView } from "../views/client/ClientFinanceView";
 import { ClientReportsView } from "../views/client/ClientReportsView";
@@ -33,9 +33,9 @@ export function ClientDashboard() {
         <div className="flex-1 overflow-y-auto p-10 pb-20">
           <div className="max-w-[1600px] mx-auto">
             {active === "dashboard" && <DashboardView />}
-            {active === "ads" && <AdsView />}
-            {active === "delivery" && <DeliveryView />}
-            {active === "menu" && <MenuView />}
+            {active === "google-ads" && <GoogleAdsView />}
+            {active === "meta-ads" && <MetaAdsView />}
+            {active === "ifood" && <IfoodView />}
             {active === "crm" && <ClientCRMView />}
             {active === "finance" && <ClientFinanceView />}
             {active === "reports" && <ClientReportsView />}
