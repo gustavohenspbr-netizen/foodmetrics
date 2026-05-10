@@ -1,15 +1,11 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 
-// Mock credentials
 const MOCK_USERS = [
   { email: "admin@foodmetricas.com.br", password: "admin123", role: "admin" },
   { email: "cliente@burgerkings.com.br", password: "cliente123", role: "client" },
 ];
 
-export default function LoginPage() {
-  const router = useRouter();
+export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,17 +31,15 @@ export default function LoginPage() {
     sessionStorage.setItem("fm_email", user.email);
 
     if (user.role === "admin") {
-      router.push("/admin");
+      window.location.href = "/admin.html";
     } else {
-      router.push("/dashboard");
+      window.location.href = "/dashboard.html";
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120] p-6 transition-colors duration-300 font-sans">
-
       <div className="w-full max-w-md animate-fadeIn">
-        {/* Logo */}
         <div className="text-center mb-10">
           <img src="/images/imgi_56_Ativo-1.svg" alt="Food Métricas" className="h-10 mx-auto mb-8 drop-shadow-sm" />
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">Bem-vindo de volta</h1>
@@ -54,7 +48,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Form Card */}
         <form onSubmit={handleLogin}
           className="bg-white dark:bg-[#0F172A] rounded-3xl p-10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-slate-200/60 dark:border-slate-800/60 space-y-7">
 
@@ -100,7 +93,6 @@ export default function LoginPage() {
             {loading ? "Entrando..." : "Acessar Painel"}
           </button>
 
-          {/* Demo hint */}
           <div className="rounded-xl px-5 py-4 mt-8 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 font-medium text-[13px]">
             <p className="flex justify-between items-center">
               <span><span className="font-bold text-slate-700 dark:text-slate-300">Admin:</span> admin@...</span>
