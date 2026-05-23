@@ -361,16 +361,97 @@ a { text-decoration: none; color: inherit; }
 
 .dores__title { max-width: 680px; margin-left: auto; margin-right: auto; text-align: center; }
 .dores__grid { margin-bottom: 0; }
-.dore-card { padding: 36px; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; transition: transform var(--transition), border-color var(--transition); }
-.dore-card:hover { transform: translateY(-6px); border-color: rgba(224,28,28,0.3); }
-.dore-card--featured {
-  border-color: rgba(224,28,28,0.4);
-  background: linear-gradient(135deg, rgba(224,28,28,0.06), rgba(255,255,255,0.03));
+/* Dores Bento Box Redesign */
+.dore-card { 
+  padding: 40px; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; 
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.5s ease, border-color 0.5s ease;
+  position: relative; overflow: hidden; border-radius: 24px;
+  background: linear-gradient(145deg, rgba(20, 18, 20, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 20px 40px rgba(0, 0, 0, 0.5);
 }
-.icon-anim img { width: 32px; height: 32px; object-fit: contain; filter: brightness(0) invert(1); }
-.dore-card__icon { margin-bottom: 20px; }
-.dore-card h3 { font-family: var(--font-h); font-size: 1.3rem; font-weight: 700; margin-bottom: 14px; }
-.dore-card p { color: var(--muted); font-size: 0.95rem; line-height: 1.7; margin-bottom: 0; }
+.dore-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #ea1d2c, transparent);
+  opacity: 0.3; transition: opacity 0.4s;
+}
+.dore-card::after {
+  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle at 50% 0%, rgba(234, 29, 44, 0.1) 0%, transparent 50%);
+  pointer-events: none; z-index: 0; transition: opacity 0.4s;
+}
+.dore-card > * { position: relative; z-index: 2; }
+.dore-card:hover { 
+  transform: translateY(-8px) scale(1.02); 
+  border-color: rgba(234, 29, 44, 0.3);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 30px 60px rgba(234, 29, 44, 0.15);
+}
+.dore-card:hover::before { opacity: 1; }
+.dore-card:hover::after { opacity: 0.8; }
+
+.dore-card--featured {
+  background: linear-gradient(145deg, rgba(30, 15, 15, 0.9) 0%, rgba(15, 10, 10, 0.95) 100%);
+  border-color: rgba(234, 29, 44, 0.2);
+}
+.dore-card--featured::after {
+  background: radial-gradient(circle at 50% 0%, rgba(234, 29, 44, 0.2) 0%, transparent 60%);
+}
+
+.dore-card__icon { margin-bottom: 24px; position: relative; z-index: 2; }
+.dore-card h3 { 
+  font-family: var(--font-h); font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; 
+  letter-spacing: -0.02em; line-height: 1.2;
+}
+.dore-card p { color: rgba(255,255,255,0.7); font-size: 1.05rem; line-height: 1.7; margin-bottom: 0; }
+
+/* Estrategias Wide Cards (Stacked) */
+.estrategia-wide {
+  display: flex; align-items: center; gap: 40px; padding: 48px;
+  background: linear-gradient(90deg, rgba(20,20,22,0.9), rgba(15,15,18,0.95));
+  border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 20px 40px rgba(0,0,0,0.4);
+  position: relative; overflow: hidden;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+  width: 100%;
+}
+.estrategia-wide:hover {
+  transform: translateX(10px);
+}
+.estrategia-wide::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 6px;
+  background: var(--primary); border-radius: 6px 0 0 6px;
+  box-shadow: 0 0 20px var(--primary);
+}
+.estrategia-wide:nth-child(even)::before { background: #3b82f6; box-shadow: 0 0 20px #3b82f6; }
+.estrategia-wide:nth-child(3n)::before { background: #10b981; box-shadow: 0 0 20px #10b981; }
+.estrategia-wide:nth-child(4n)::before { background: #f59e0b; box-shadow: 0 0 20px #f59e0b; }
+
+.estrategia-wide__icon {
+  flex-shrink: 0; width: 120px; height: 120px; 
+  background: var(--primary); border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  box-shadow: 0 10px 30px rgba(255, 90, 31, 0.4);
+}
+.estrategia-wide__icon img { 
+  width: 64px; height: 64px; 
+  filter: brightness(0);
+}
+.estrategia-wide__content { flex-grow: 1; }
+.estrategia-wide__content h3 {
+  font-family: var(--font-h); font-size: 2rem; font-weight: 800; margin-bottom: 16px;
+  letter-spacing: -0.03em;
+}
+.estrategia-wide__content p { color: rgba(255,255,255,0.7); font-size: 1.1rem; line-height: 1.8; margin-bottom: 0; }
+
+@media (max-width: 768px) {
+  .estrategia-wide { flex-direction: column; align-items: flex-start; gap: 24px; padding: 32px; }
+  .estrategia-wide:hover { transform: translateY(-5px); }
+  .estrategia-wide::before { top: 0; left: 0; right: 0; height: 6px; width: 100%; border-radius: 6px 6px 0 0; }
+  .estrategia-wide__icon { width: 80px; height: 80px; border-radius: 16px; }
+  .estrategia-wide__icon img { width: 40px; height: 40px; }
+  .estrategia-wide__content h3 { font-size: 1.6rem; }
+}
 
 /* Checklist and Para Quem */
 .para-quem__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
