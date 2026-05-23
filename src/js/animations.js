@@ -82,45 +82,59 @@ document.addEventListener("DOMContentLoaded", () => {
   tlLoader.to(".loader-logo", { opacity: 1, duration: 0.5, ease: "power2.out" })
           .to(".loader-bar", { width: "100%", duration: 0.8, ease: "power2.inOut" }, "-=0.2")
           .to(".page-loader", { yPercent: -100, duration: 0.8, ease: "power3.inOut" })
-          .fromTo("#hero .hero__title", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.4")
-          .fromTo("#hero .hero__portrait-wrap", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.6")
-          .fromTo("#hero .hero__bottom", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, "-=0.6");
+          .fromTo("#hero .hero__portrait-wrap", { opacity: 0 }, { opacity: 1, duration: 1, ease: "power3.out" }, "-=0.4");
 
   // 5. Hero Pinned & Scroll Effects
   if (!prefersReducedMotion) {
-    const heroTitle = document.querySelector('.hero__title');
+    const heroLeft = document.querySelector('.hero__left');
     const heroPortrait = document.querySelector('.hero__portrait-wrap');
     const heroSection = document.querySelector('#hero');
 
-    if (heroSection && heroTitle && heroPortrait) {
-      ScrollTrigger.create({
-        trigger: heroSection,
-        start: "top top",
-        end: "+=100%",
-        pin: true,
-        animation: gsap.timeline()
-          .to(heroTitle, { scale: 1.1, letterSpacing: "0.02em", opacity: 0.2, ease: "none" }, 0)
-          .to(heroPortrait, { yPercent: 20, ease: "none" }, 0),
-        scrub: 1
+    let mm = gsap.matchMedia();
+
+    if (heroSection && heroLeft && heroPortrait) {
+      mm.add("(min-width: 901px)", () => {
+        // Desktop: Start hidden/centered, animate to side
+        gsap.set(heroLeft, { opacity: 0, x: -50 });
+        gsap.set(heroPortrait, { scale: 1.5, left: "50%" });
+
+        ScrollTrigger.create({
+          trigger: heroSection,
+          start: "top top",
+          end: "+=120%",
+          pin: true,
+          animation: gsap.timeline()
+            .to(heroPortrait, { left: "75%", scale: 1, ease: "power2.inOut" }, 0)
+            .to(heroLeft, { opacity: 1, x: 0, ease: "power2.inOut" }, 0),
+          scrub: 1
+        });
+      });
+
+      mm.add("(max-width: 900px)", () => {
+        // Mobile: Just normal layout, no pinning
+        gsap.set(heroLeft, { opacity: 1, x: 0 });
+        gsap.set(heroPortrait, { scale: 1, left: "50%" });
       });
     }
 
     // 5.5 Manifesto Animation
-    const manifestoText = document.querySelector('.gsap-manifesto');
-    if (manifestoText) {
-      gsap.fromTo(manifestoText, 
-        { opacity: 0.2, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          scrollTrigger: {
-            trigger: ".manifesto",
-            start: "top 75%",
-            end: "bottom 75%",
-            scrub: true
-          }
-        }
-      );
+    const manifestoSection = document.querySelector('.manifesto');
+    const manifestoBurger = document.querySelector('.manifesto__burger-wrap');
+    const manifestoTextWrap = document.querySelector('.manifesto__text-wrap');
+
+    if (manifestoSection && manifestoBurger && manifestoTextWrap) {
+      mm.add("(min-width: 901px)", () => {
+        ScrollTrigger.create({
+          trigger: manifestoSection,
+          start: "top top",
+          end: "+=120%",
+          pin: true,
+          animation: gsap.timeline()
+            .to(manifestoBurger, { left: "25%", ease: "power2.inOut" }, 0)
+            .to(manifestoTextWrap, { opacity: 1, x: 0, ease: "power2.inOut" }, 0),
+          scrub: 1
+        });
+      });
     }
 
     // 6. Scroll Reveals
