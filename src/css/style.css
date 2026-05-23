@@ -184,7 +184,7 @@ a { text-decoration: none; color: inherit; }
 .hero__title-line { display: block; white-space: nowrap; }
 
 .hero__portrait-wrap {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5);
+  position: absolute; top: 50%; left: 50%;
   width: 100%; max-width: 500px; z-index: 3;
   pointer-events: none;
 }

@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
       mm.add("(min-width: 901px)", () => {
         // Desktop: Start hidden/centered, animate to side
         gsap.set(heroLeft, { opacity: 0, x: -50 });
-        gsap.set(heroPortrait, { scale: 1.5, left: "50%" });
+        gsap.set(heroPortrait, { scale: 1.5, left: "50%", xPercent: -50, yPercent: -50 });
 
         ScrollTrigger.create({
           trigger: heroSection,
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
           end: "+=120%",
           pin: true,
           animation: gsap.timeline()
-            .to(heroPortrait, { left: "75%", scale: 1, ease: "power2.inOut" }, 0)
+            .to(heroPortrait, { left: "75%", scale: 1, xPercent: -50, yPercent: -50, ease: "power2.inOut" }, 0)
             .to(heroLeft, { opacity: 1, x: 0, ease: "power2.inOut" }, 0),
           scrub: 1
         });
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       mm.add("(max-width: 900px)", () => {
         // Mobile: Just normal layout, no pinning
         gsap.set(heroLeft, { opacity: 1, x: 0 });
-        gsap.set(heroPortrait, { scale: 1, left: "50%" });
+        gsap.set(heroPortrait, { scale: 1, left: "50%", xPercent: -50, yPercent: 0 });
       });
     }
 
