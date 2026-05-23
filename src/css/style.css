@@ -78,7 +78,7 @@ a { text-decoration: none; color: inherit; }
   padding: 6px 18px; border-radius: 100px; margin-bottom: 18px;
 }
 .section__header { text-align: center; margin-bottom: 64px; }
-.section__title { font-family: var(--font-h); font-size: clamp(3.5rem, 8vw, 8rem); font-weight: 400; line-height: 0.9; margin-bottom: 24px; text-transform: uppercase; letter-spacing: -0.01em; }
+.section__title { font-family: var(--font-h); font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 400; line-height: 0.9; margin-bottom: 24px; text-transform: uppercase; letter-spacing: -0.01em; }
 
 /* ===== BUTTONS ===== */
 .btn {
@@ -167,7 +167,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 .hero__title {
-  font-family: var(--font-h); font-size: clamp(4rem, 12vw, 15rem);
+  font-family: var(--font-h); font-size: clamp(2.5rem, 8vw, 6.5rem);
   font-weight: 400; line-height: 0.85; margin: 24px 0;
   text-transform: uppercase; letter-spacing: -0.02em;
   display: flex; flex-direction: column; align-items: center;
@@ -185,7 +185,7 @@ a { text-decoration: none; color: inherit; }
 .hero__portrait { width: 100%; filter: drop-shadow(0 0 80px rgba(255,90,31,0.2)); }
 
 .hero__bottom {
-  margin-top: 300px; /* Space for the portrait */
+  margin-top: 140px; /* Space for the portrait */
   display: flex; flex-direction: column; align-items: center;
   position: relative; z-index: 4;
 }
@@ -228,27 +228,11 @@ a { text-decoration: none; color: inherit; }
 
 /* Mobile */
 @media (max-width: 900px) {
-  .hero__bottom { margin-top: 200px; }
+  .hero__bottom { margin-top: 100px; }
   .hero__portrait-wrap { max-width: 300px; top: 40%; }
 }
 
-/* MARQUEE GIANT */
-.marquee-giant {
-  background: var(--primary); color: #000;
-  padding: 24px 0; overflow: hidden; white-space: nowrap;
-  font-family: var(--font-h); font-size: clamp(2rem, 5vw, 4rem);
-  text-transform: uppercase; border-top: 1px solid rgba(0,0,0,0.1);
-  border-bottom: 1px solid rgba(0,0,0,0.1);
-  position: relative; z-index: 5;
-}
-.marquee-giant__track {
-  display: inline-flex; align-items: center; gap: 48px;
-  animation: marquee-giant 15s linear infinite;
-}
-@keyframes marquee-giant {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
+
 
 /* MANIFESTO */
 .manifesto { padding: 120px 0; background: var(--bg2); }
@@ -864,7 +848,6 @@ body::after {
   transform: translate(-50%, -50%);
   display: none;
   font-size: 32px; line-height: 1; text-align: center;
-  transition: transform 0.3s ease;
 }
 .custom-cursor::after {
   content: "🍕";

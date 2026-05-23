@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cursor) {
       // Follow cursor
       window.addEventListener('mousemove', (e) => {
-        gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+        gsap.set(cursor, { x: e.clientX, y: e.clientY });
       });
 
       // Hover states for links and buttons
@@ -163,6 +163,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     });
+
+    // Chart Bars Animation
+    const chartBars = document.querySelectorAll('.chart-bars .bar');
+    if (chartBars.length) {
+      gsap.fromTo(chartBars, 
+        { scaleY: 0, transformOrigin: "bottom center" },
+        {
+          scaleY: 1,
+          duration: 1,
+          stagger: 0.1,
+          ease: "back.out(1.7)",
+          scrollTrigger: {
+            trigger: ".solucao__chart-wrap",
+            start: "top 80%"
+          }
+        }
+      );
+    }
   }
 
   // 8. Number Counters
