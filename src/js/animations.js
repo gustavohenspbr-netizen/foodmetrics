@@ -131,8 +131,22 @@ document.addEventListener("DOMContentLoaded", () => {
           pin: true,
           animation: gsap.timeline()
             .to(manifestoBurger, { left: "25%", ease: "power2.inOut" }, 0)
-            .to(manifestoTextWrap, { opacity: 1, x: 0, ease: "power2.inOut" }, 0),
+            .to(manifestoTextWrap, { opacity: 1, x: 0, ease: "power2.inOut" }, 0)
+            .to(".ifood-notif", { 
+              opacity: 1, 
+              y: 0, 
+              scale: 1, 
+              stagger: 0.15, 
+              ease: "back.out(1.5)" 
+            }, 0.2), // Starts fading in shortly after the movement begins
           scrub: 1
+        });
+      });
+
+      mm.add("(max-width: 900px)", () => {
+        gsap.to(".ifood-notif", {
+          opacity: 1, y: 0, scale: 1, stagger: 0.15, ease: "back.out(1.5)",
+          scrollTrigger: { trigger: manifestoBurger, start: "top 60%" }
         });
       });
     }
