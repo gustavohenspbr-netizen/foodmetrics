@@ -470,19 +470,34 @@ a { text-decoration: none; color: inherit; }
 .solucao__img-wrap { position: relative; }
 .solucao__photo { width: 100%; border-radius: var(--radius-lg); object-fit: cover; aspect-ratio: 3/4; box-shadow: 0 20px 60px rgba(224,28,28,0.15); }
 
-/* Animated Chart */
+/* Animated 3D Chart */
 .solucao__chart-wrap {
   width: 100%;
   aspect-ratio: 3/4;
   position: relative;
+  perspective: 1200px;
 }
 .solucao__chart-card {
   width: 100%; height: 100%;
-  padding: 32px;
+  padding: 40px;
   display: flex; flex-direction: column;
   justify-content: space-between;
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  background: linear-gradient(135deg, rgba(25, 20, 22, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
+  border: 1px solid rgba(255, 60, 60, 0.1);
+  box-shadow: -20px 30px 60px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.05);
+  transform: rotateY(-15deg) rotateX(10deg) translateZ(50px);
+  transform-style: preserve-3d; 
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.solucao__chart-card:hover {
+  transform: rotateY(-5deg) rotateX(5deg) translateZ(80px);
+}
+.chart-header {
+  transform: translateZ(30px);
+}
+.chart-bars {
+  transform: translateZ(40px);
 }
 .chart-header {
   display: flex; justify-content: space-between; align-items: center;
