@@ -120,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 5.5 Manifesto Animation
     const manifestoSection = document.querySelector('.manifesto');
     const manifestoBurger = document.querySelector('.manifesto__burger-wrap');
+    const manifestoNotifsWrap = document.querySelector('.manifesto__notifs-wrap');
     const manifestoTextWrap = document.querySelector('.manifesto__text-wrap');
 
     if (manifestoSection && manifestoBurger && manifestoTextWrap) {
@@ -131,6 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
           pin: true,
           animation: gsap.timeline()
             .to(manifestoBurger, { left: "25%", ease: "power2.inOut" }, 0)
+            .to(manifestoNotifsWrap, { left: "25%", ease: "power2.inOut" }, 0)
             .to(manifestoTextWrap, { opacity: 1, x: 0, ease: "power2.inOut" }, 0)
             .to(".ifood-notif", { 
               opacity: 1, 
@@ -138,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
               scale: 1, 
               stagger: 0.15, 
               ease: "back.out(1.5)" 
-            }, 0.2), // Starts fading in shortly after the movement begins
+            }, 0.2),
           scrub: 1
         });
       });
