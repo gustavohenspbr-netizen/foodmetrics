@@ -309,21 +309,71 @@ a { text-decoration: none; color: inherit; }
 .solucao__img-wrap { position: relative; }
 .solucao__photo { width: 100%; border-radius: var(--radius-lg); object-fit: cover; aspect-ratio: 3/4; box-shadow: 0 20px 60px rgba(224,28,28,0.15); }
 
-/* Placeholder temporário */
-.solucao__placeholder {
+/* Animated Chart */
+.solucao__chart-wrap {
   width: 100%;
   aspect-ratio: 3/4;
+  position: relative;
 }
-.solucao__placeholder-inner {
+.solucao__chart-card {
   width: 100%; height: 100%;
-  border-radius: var(--radius-lg);
+  padding: 32px;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 16px;
-  border: 2px dashed rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.02);
+  justify-content: space-between;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
-.solucao__placeholder-icon { font-size: 3rem; opacity: 0.4; }
-.solucao__placeholder-text { color: rgba(255,255,255,0.25); font-size: 0.85rem; }
+.chart-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px;
+}
+.chart-title {
+  font-family: var(--font-h); font-weight: 700; font-size: 1.2rem; color: var(--text);
+}
+.chart-trend {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 800; color: var(--green);
+  background: rgba(34, 197, 94, 0.15);
+  padding: 6px 12px; border-radius: 20px; font-size: 0.9rem;
+}
+.chart-trend svg { width: 16px; height: 16px; stroke-width: 3; }
+.chart-bars {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex: 1; gap: 12px; padding-top: 40px;
+}
+.bar-wrap {
+  flex: 1; background: rgba(255,255,255,0.05); height: 100%;
+  border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden;
+}
+.bar {
+  width: 100%; background: linear-gradient(to top, var(--red-dark), var(--red));
+  border-radius: 6px; transform-origin: bottom;
+  animation: growBar 2s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; opacity: 0;
+}
+.bar-1 { height: 30%; animation-delay: 0.2s; }
+.bar-2 { height: 45%; animation-delay: 0.4s; }
+.bar-3 { height: 40%; animation-delay: 0.6s; }
+.bar-4 { height: 65%; animation-delay: 0.8s; }
+.bar-5 { height: 80%; animation-delay: 1.0s; }
+.bar-6 { height: 100%; background: linear-gradient(to top, #16a34a, #22c55e); animation-delay: 1.2s; box-shadow: 0 0 20px rgba(34,197,94,0.4); }
+@keyframes growBar {
+  0% { transform: scaleY(0); opacity: 0; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+.chart-floating-badge {
+  position: absolute; top: 35%; right: -16px;
+  background: var(--bg); border: 1px solid var(--glass-border);
+  padding: 12px 20px; border-radius: var(--radius);
+  font-weight: 800; font-size: 0.9rem; color: var(--text);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  animation: floatBadge 4s ease-in-out infinite, appearBadge 0.6s ease forwards 1.8s;
+  opacity: 0; transform: translateY(20px);
+}
+@keyframes appearBadge { to { opacity: 1; transform: translateY(0); } }
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
 .solucao__img-badge {
   position: absolute; bottom: 24px; left: -24px;
   padding: 16px 24px; text-align: center;
