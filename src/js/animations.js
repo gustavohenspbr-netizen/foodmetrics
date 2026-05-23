@@ -239,34 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 9. Lateral Ticker Updates
-  const ticker = document.querySelector('.lateral-ticker');
-  const sectionsArr = Array.from(document.querySelectorAll('section[id]'));
-  
-  if (ticker && sectionsArr.length) {
-    gsap.to(ticker, { opacity: 1, duration: 1, delay: 2 });
-    
-    sectionsArr.forEach((sec, index) => {
-      ScrollTrigger.create({
-        trigger: sec,
-        start: "top 50%",
-        end: "bottom 50%",
-        onEnter: () => updateTicker(index, sec.id),
-        onEnterBack: () => updateTicker(index, sec.id)
-      });
-    });
 
-    function updateTicker(index, id) {
-      const idxStr = String(index + 1).padStart(2, '0');
-      const totalStr = String(sectionsArr.length).padStart(2, '0');
-      const name = id.replace(/-/g, ' ').toUpperCase();
-      ticker.textContent = `${idxStr}/${totalStr} — ${name}`;
-      
-      gsap.fromTo(ticker, 
-        { y: 20, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
-      );
-    }
-  }
 
 });
