@@ -76,22 +76,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 4. Loader & Hero Entry
-  const tlLoader = gsap.timeline();
+  const tlLoader = gsap.timeline({
+    onComplete: () => ScrollTrigger.refresh()
+  });
   tlLoader.to(".loader-logo", { opacity: 1, duration: 0.5, ease: "power2.out" })
           .to(".loader-bar", { width: "100%", duration: 0.8, ease: "power2.inOut" }, "-=0.2")
           .to(".page-loader", { yPercent: -100, duration: 0.8, ease: "power3.inOut" })
-          .from("#hero .hero__title", { y: 50, opacity: 0, duration: 1, ease: "power3.out" }, "-=0.4")
-          .from("#hero .hero__sub", { y: 20, opacity: 0, duration: 0.8, ease: "power2.out" }, "-=0.6")
-          .from("#hero .hero__actions, #hero .hero__proof", { y: 20, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" }, "-=0.6")
-          .from("#hero .hero__portrait-wrap", { scale: 0.9, opacity: 0, duration: 1, ease: "power3.out" }, "-=1");
+          .fromTo("#hero .hero__title", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.4")
+          .fromTo("#hero .hero__portrait-wrap", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.6")
+          .fromTo("#hero .hero__bottom", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, "-=0.6");
 
   // 5. Hero Pinned & Scroll Effects
   if (!prefersReducedMotion) {
     const heroTitle = document.querySelector('.hero__title');
-    const heroRight = document.querySelector('.hero__right');
+    const heroPortrait = document.querySelector('.hero__portrait-wrap');
     const heroSection = document.querySelector('#hero');
 
-    if (heroSection) {
+    if (heroSection && heroTitle && heroPortrait) {
       ScrollTrigger.create({
         trigger: heroSection,
         start: "top top",
@@ -99,9 +100,27 @@ document.addEventListener("DOMContentLoaded", () => {
         pin: true,
         animation: gsap.timeline()
           .to(heroTitle, { scale: 1.1, letterSpacing: "0.02em", opacity: 0.2, ease: "none" }, 0)
-          .to(heroRight, { yPercent: -20, ease: "none" }, 0),
+          .to(heroPortrait, { yPercent: 20, ease: "none" }, 0),
         scrub: 1
       });
+    }
+
+    // 5.5 Manifesto Animation
+    const manifestoText = document.querySelector('.gsap-manifesto');
+    if (manifestoText) {
+      gsap.fromTo(manifestoText, 
+        { opacity: 0.2, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          scrollTrigger: {
+            trigger: ".manifesto",
+            start: "top 75%",
+            end: "bottom 75%",
+            scrub: true
+          }
+        }
+      );
     }
 
     // 6. Scroll Reveals
@@ -113,17 +132,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const elementsToStagger = sec.querySelectorAll('.section__title, .section__sub, .dore-card, .pilar, .estrategia-card, .numero, .solucao__content > *');
       
       if(elementsToStagger.length) {
-        gsap.from(elementsToStagger, {
-          y: 40,
-          opacity: 0,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: sec,
-            start: "top 80%"
+        gsap.fromTo(elementsToStagger, 
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: sec,
+              start: "top 80%"
+            }
           }
-        });
+        );
       }
     });
 
