@@ -428,14 +428,12 @@ a { text-decoration: none; color: inherit; }
 
 .estrategia-wide__icon {
   flex-shrink: 0; width: 120px; height: 120px; 
-  background: var(--primary); border-radius: 24px;
+  background: rgba(255,255,255,0.03); border-radius: 24px;
   display: flex; align-items: center; justify-content: center;
-  border: none;
-  box-shadow: 0 10px 30px rgba(255, 90, 31, 0.4);
+  border: 1px solid rgba(255,255,255,0.05);
 }
 .estrategia-wide__icon img { 
   width: 64px; height: 64px; 
-  filter: brightness(0);
 }
 .estrategia-wide__content { flex-grow: 1; }
 .estrategia-wide__content h3 {
@@ -611,8 +609,15 @@ a { text-decoration: none; color: inherit; }
 .estrategias__list { display: flex; flex-direction: column; gap: 24px; flex: 1; }
 .estrategia-card { padding: 32px; display: flex; flex-direction: column; gap: 16px; transition: transform var(--transition), border-color var(--transition); border-left: 3px solid transparent; }
 .estrategia-card:hover { transform: translateX(8px); border-left-color: var(--red); background: rgba(255,255,255,0.04); }
-.estrategia-card__icon-wrap { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); }
-.estrategia-card__icon { width: 24px; height: 24px; object-fit: contain; }
+.estrategia-card__icon-wrap { 
+  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; 
+  background: var(--primary); border-radius: 12px; margin-bottom: 8px; 
+  box-shadow: 0 4px 15px rgba(255, 90, 31, 0.4); border: none;
+}
+.estrategia-card__icon { 
+  width: 24px; height: 24px; object-fit: contain; 
+  filter: brightness(0); /* Black icon */
+}
 .estrategia-card__title { font-family: var(--font-h); font-size: 1.3rem; font-weight: 700; color: #fff; }
 .estrategia-card p { color: var(--muted); font-size: 0.95rem; line-height: 1.7; margin-bottom: 0; }
 
