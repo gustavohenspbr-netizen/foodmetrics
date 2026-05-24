@@ -1030,25 +1030,39 @@ body::after {
   opacity: 0.05;
 }
 
-/* Custom Cursor Pizza */
+/* Custom Cursor Pizza — no delay, follows mouse 1:1 */
 .custom-cursor {
   position: fixed; top: 0; left: 0;
   width: 32px; height: 32px;
   pointer-events: none; z-index: 100000;
-  transform: translate(-50%, -50%);
   display: none;
-  font-size: 32px; line-height: 1; text-align: center;
+  font-size: 28px; line-height: 1; text-align: center;
+  /* No transition on transform — only on visual states */
+  transition: none;
+  will-change: transform;
 }
-.custom-cursor::after {
-  content: "🍕";
+.custom-cursor__inner {
   position: absolute;
-  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  top: 50%; left: 50%;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
 }
-.custom-cursor.active { transform: translate(-50%, -50%) scale(1.5) rotate(15deg); }
+.custom-cursor.active .custom-cursor__inner {
+  transform: translate(-50%, -50%) scale(1.45) rotate(18deg);
+}
+.custom-cursor.click .custom-cursor__inner {
+  transform: translate(-50%, -50%) scale(0.85) rotate(-10deg);
+}
 @media (pointer: fine) {
   .custom-cursor { display: block; }
   body { cursor: none; }
-  a, button, .btn { cursor: none; }
+  a, button, .btn, summary, input, textarea, select, [role="button"] { cursor: none; }
+}
+@media (max-width: 900px) {
+  .custom-cursor { display: none !important; }
 }
 
 /* Loader */
@@ -1091,3 +1105,209 @@ body::after {
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* ============================================================
+   FLOATING FOOD ICONS — monochrome, sutis, sem poluir
+   ============================================================ */
+.food-floats {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 1;
+  overflow: hidden;
+}
+.food-float {
+  position: absolute;
+  width: 48px; height: 48px;
+  color: rgba(255, 255, 255, 0.04);
+  filter: blur(0.3px);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  will-change: transform;
+}
+.food-floats.ready .food-float { opacity: 1; }
+.food-float--fork   { top: 12vh; left: 6vw;    width: 80px;  height: 80px; }
+.food-float--knife  { top: 28vh; right: 5vw;   width: 70px;  height: 70px; }
+.food-float--cup    { top: 55vh; left: 4vw;    width: 90px;  height: 90px; color: rgba(255,90,31,0.05); }
+.food-float--plate  { top: 80vh; right: 8vw;   width: 110px; height: 110px; }
+.food-float--bottle { top: 110vh; left: 10vw;  width: 75px;  height: 75px; }
+.food-float--chef   { top: 140vh; right: 10vw; width: 95px;  height: 95px; color: rgba(255,90,31,0.05); }
+
+@media (max-width: 900px) {
+  .food-floats { display: none; }
+}
+
+/* ============================================================
+   REFINEMENTS — section reveals, glass cards, polish
+   ============================================================ */
+
+/* Section reveal padrão (mask reveal vertical) */
+.reveal-mask {
+  -webkit-mask-image: linear-gradient(180deg, black 0%, black 100%);
+  mask-image: linear-gradient(180deg, black 0%, black 100%);
+}
+
+/* Glass card refinado — mais polido */
+.glass-card {
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1),
+    box-shadow 0.4s ease,
+    border-color 0.4s ease,
+    background 0.4s ease;
+}
+.glass-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Btn polished hover */
+.btn--primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn--primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.7s ease;
+}
+.btn--primary:hover::before {
+  transform: translateX(100%);
+}
+
+/* Section header com badge orange-ish */
+.section__header .badge {
+  background: linear-gradient(135deg, rgba(255,90,31,0.15), rgba(255,90,31,0.05));
+  border-color: rgba(255,90,31,0.3);
+  color: #ff9060;
+}
+
+/* Highlight com sublinhado animado */
+.highlight {
+  position: relative;
+  background: linear-gradient(120deg, #ff5a1f, #ff8a5b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Scroll progress bar (top of page) */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, #ff5a1f, #ff8a5b);
+  z-index: 100000;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(255, 90, 31, 0.6);
+  transition: width 0.05s linear;
+}
+
+/* Refined hero portrait — softer glow */
+.hero__portrait {
+  filter:
+    drop-shadow(0 30px 60px rgba(255, 90, 31, 0.15))
+    drop-shadow(0 0 90px rgba(255, 90, 31, 0.12));
+}
+
+/* Manifesto burger — parallax suave (não pin) */
+.manifesto {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 50%, var(--bg) 100%);
+}
+.manifesto__burger-wrap {
+  will-change: transform, opacity;
+}
+.manifesto__burger {
+  /* sutil halo laranja por trás do burger */
+  filter:
+    contrast(1.1)
+    drop-shadow(0 0 60px rgba(255,90,31,0.3))
+    drop-shadow(0 30px 80px rgba(0,0,0,0.6));
+}
+.manifesto__text-wrap {
+  opacity: 0;
+  transform: translateY(40px);
+  will-change: transform, opacity;
+}
+
+/* iFood notif — entrada mais elegante */
+.ifood-notif {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Section padding consistency */
+.section {
+  padding: 120px 0;
+}
+@media (max-width: 768px) {
+  .section { padding: 80px 0; }
+}
+
+/* Header refinado quando scrollado */
+.header.scrolled {
+  background: rgba(8, 8, 16, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Logos marquee — mask edges pra fade lateral */
+.logos-marquee-wrap {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+/* Section title com gradient sutil */
+.section__title {
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.section__title .highlight {
+  -webkit-text-fill-color: transparent;
+}
+
+/* Dores card hover — destaque vermelho sutil */
+.dore-card {
+  transition: all 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.dore-card:hover {
+  border-color: rgba(255, 90, 31, 0.4) !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 90, 31, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Estratégia card polish */
+.estrategia-card,
+.estrategia-wide {
+  transition: all 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.estrategia-card:hover,
+.estrategia-wide:hover {
+  border-color: rgba(255, 90, 31, 0.35) !important;
+}
+
+/* Magnetic field — disable on touch devices */
+@media (hover: none) {
+  .btn { transform: none !important; }
+}
+
+/* Section divider — linha sutil entre sections */
+.section + .section {
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Reduced motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  .food-float,
+  .orb,
+  .bg-giant-text {
+    animation: none !important;
+    transform: none !important;
+  }
+}

@@ -141,14 +141,7 @@ document.querySelectorAll('.icon-anim').forEach(icon => {
   });
 });
 
-// ===== PARALLAX ON HERO IMAGE =====
-const heroImg = document.querySelector('.hero__img');
-if (heroImg) {
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    heroImg.style.transform = `translateY(${y * 0.08}px)`;
-  }, { passive: true });
-}
+// (Parallax do hero é controlado em animations.js via GSAP/ScrollTrigger)
 
 // ===== FAQ ACCORDION LOGIC =====
 const faqItems = document.querySelectorAll('.faq__item');
