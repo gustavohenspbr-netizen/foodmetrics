@@ -8,6 +8,7 @@ import { DashboardView } from "../views/client/DashboardView";
 import { GoogleAdsView } from "../views/client/GoogleAdsView";
 import { MetaAdsView } from "../views/client/MetaAdsView";
 import { IfoodView } from "../views/client/IfoodView";
+import { MenuView } from "../views/client/MenuView";
 import { GMBView } from "../views/client/GMBView";
 import { SiteView } from "../views/client/SiteView";
 import { StrategyView } from "../views/client/StrategyView";
@@ -66,6 +67,7 @@ export function ClientDashboard() {
             {active === "google-ads" && <GoogleAdsView />}
             {active === "meta-ads" && <MetaAdsView />}
             {active === "ifood" && <IfoodView />}
+            {active === "menu" && <MenuView />}
             {active === "gmb" && <GMBView />}
             {active === "site" && <SiteView />}
             {active === "strategy" && <StrategyView />}

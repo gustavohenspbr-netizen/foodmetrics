@@ -20,6 +20,7 @@ import {
   UserCog,
   FileSignature,
   ChevronLeft,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -49,12 +50,13 @@ export const CLIENT_NAV: NavItem[] = [
   { id: "google-ads", icon: BarChart2, label: "Google Ads", section: "Marketing" },
   { id: "meta-ads", icon: PieChart, label: "Meta Ads", section: "Marketing" },
   { id: "ifood", icon: ShoppingBag, label: "iFood", section: "Marketing" },
+  { id: "menu", icon: BookOpen, label: "Cardápio Digital", section: "Marketing" },
   { id: "gmb", icon: Star, label: "Google Meu Negócio", section: "Marketing" },
   { id: "site", icon: Globe, label: "Site & Tráfego", section: "Marketing" },
   { id: "strategy", icon: Target, label: "Estratégia", section: "Gestão" },
   { id: "crm", icon: Users, label: "CRM", section: "Gestão" },
   { id: "materials", icon: Image, label: "Materiais", section: "Gestão" },
-  { id: "messages", icon: MessageSquare, label: "Mensagens", badge: 2, section: "Gestão" },
+  { id: "messages", icon: MessageSquare, label: "Mensagens", section: "Gestão" },
   { id: "reports", icon: FileText, label: "Relatórios", section: "Gestão" },
   { id: "finance", icon: CreditCard, label: "Financeiro", section: "Gestão" },
 ];

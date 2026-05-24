@@ -35,7 +35,7 @@ export type QuickAction = {
 
 interface ConnectAccountProps {
   clientId: string | undefined;
-  provider: "google_ads" | "meta_ads" | "ifood" | "gmb" | "ga4";
+  provider: string;
   title: string;
   description: string;
   fields: Field[];
