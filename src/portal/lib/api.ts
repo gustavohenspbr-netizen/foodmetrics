@@ -6,23 +6,34 @@ import { supabase } from "./supabase";
 // ============================================================
 export function useQuery<T>(
   fetcher: () => Promise<{ data: T | null; error: any }>,
-  deps: any[] = []
+  deps: any[] = [],
+  initialValue: T | null = null
 ) {
-  const [data, setData] = useState<T | null>(null);
+  const [data, setData] = useState<T | null>(initialValue);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
   const refetch = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await fetcher();
-    if (error) {
-      console.error("[useQuery]", error);
-      setError(error);
-    } else {
-      setData(data);
-      setError(null);
+    try {
+      const { data, error } = await fetcher();
+      if (error) {
+        console.error("[useQuery]", error);
+        setError(error);
+        // mantém o initialValue em vez de virar null
+        setData(initialValue);
+      } else {
+        setData(data ?? initialValue);
+        setError(null);
+      }
+    } catch (e) {
+      console.error("[useQuery] exception", e);
+      setError(e);
+      setData(initialValue);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
@@ -31,6 +42,14 @@ export function useQuery<T>(
   }, deps);
 
   return { data, loading, error, refetch };
+}
+
+// Helper: hooks de array sempre retornam [] em vez de null
+export function useArrayQuery<T>(
+  fetcher: () => Promise<{ data: T[] | null; error: any }>,
+  deps: any[] = []
+) {
+  return useQuery<T[]>(fetcher, deps, [] as T[]);
 }
 
 // ============================================================
@@ -54,7 +73,7 @@ export type Client = {
 };
 
 export function useClients() {
-  return useQuery<Client[]>(
+  return useArrayQuery<Client>(
     async () => {
       const { data, error } = await supabase.from("clients").select("*").order("name");
       return { data: data as Client[] | null, error };
@@ -64,7 +83,7 @@ export function useClients() {
 }
 
 export function useClientsWithManager() {
-  return useQuery<(Client & { manager_name: string | null })[]>(
+  return useArrayQuery<Client & { manager_name: string | null }>(
     async () => {
       const { data, error } = await supabase
         .from("clients")
@@ -111,7 +130,7 @@ export type Profile = {
 };
 
 export function useTeam() {
-  return useQuery<Profile[]>(
+  return useArrayQuery<Profile>(
     async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -150,7 +169,7 @@ export type CampaignWithMetrics = Campaign & {
 };
 
 export function useCampaigns(clientId: string | undefined, channel?: "google" | "meta") {
-  return useQuery<CampaignWithMetrics[]>(
+  return useArrayQuery<CampaignWithMetrics>(
     async () => {
       if (!clientId) return { data: [], error: null };
       let q = supabase.from("campaigns").select("*").eq("client_id", clientId);
@@ -191,7 +210,7 @@ export function useCampaigns(clientId: string | undefined, channel?: "google" | 
 
 /** Métricas diárias agregadas por mês — pro gráfico */
 export function useMonthlyMetrics(clientId: string | undefined) {
-  return useQuery<{ month: string; google: number; meta: number; revenue: number }[]>(
+  return useArrayQuery<{ month: string; google: number; meta: number; revenue: number }>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -275,7 +294,7 @@ export function useIfoodSummary(clientId: string | undefined) {
 }
 
 export function useIfoodHourly(clientId: string | undefined) {
-  return useQuery<{ hour: string; orders: number }[]>(
+  return useArrayQuery<{ hour: string; orders: number }>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -294,7 +313,7 @@ export function useIfoodHourly(clientId: string | undefined) {
 }
 
 export function useIfoodTopItems(clientId: string | undefined) {
-  return useQuery<{ name: string; orders: number; revenue: number }[]>(
+  return useArrayQuery<{ name: string; orders: number; revenue: number }>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -310,7 +329,7 @@ export function useIfoodTopItems(clientId: string | undefined) {
 }
 
 export function useIfoodByNeighborhood(clientId: string | undefined) {
-  return useQuery<{ neighborhood: string; orders: number; revenue: number }[]>(
+  return useArrayQuery<{ neighborhood: string; orders: number; revenue: number }>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -328,7 +347,7 @@ export function useIfoodByNeighborhood(clientId: string | undefined) {
 // REVIEWS
 // ============================================================
 export function useReviews(clientId: string | undefined, source?: "ifood" | "gmb") {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       if (!clientId) return { data: [], error: null };
       let q = supabase.from("reviews").select("*").eq("client_id", clientId).order("posted_at", { ascending: false });
@@ -423,7 +442,7 @@ export function useSiteAnalytics(clientId: string | undefined) {
 // STRATEGY
 // ============================================================
 export function useGoals(clientId: string | undefined) {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -438,7 +457,7 @@ export function useGoals(clientId: string | undefined) {
 }
 
 export function useInitiatives(clientId: string | undefined) {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -456,7 +475,7 @@ export function useInitiatives(clientId: string | undefined) {
 }
 
 export function useRecommendations(clientId: string | undefined) {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -475,7 +494,7 @@ export function useRecommendations(clientId: string | undefined) {
 // CRM (LEADS)
 // ============================================================
 export function useLeads() {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       const { data, error } = await supabase
         .from("leads")
@@ -498,7 +517,7 @@ export async function updateLeadStatus(id: string, status: string) {
 // CONTRACTS + INVOICES
 // ============================================================
 export function useInvoices(clientId?: string) {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       let q = supabase
         .from("invoices")
@@ -513,7 +532,7 @@ export function useInvoices(clientId?: string) {
 }
 
 export function useContracts() {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       const { data, error } = await supabase
         .from("contracts")
@@ -529,7 +548,7 @@ export function useContracts() {
 // TASKS + EVENTS + TEAM
 // ============================================================
 export function useTasks() {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       const { data, error } = await supabase
         .from("tasks")
@@ -547,7 +566,7 @@ export function useTasks() {
 }
 
 export function useEvents() {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       const { data, error } = await supabase
         .from("events")
@@ -568,7 +587,7 @@ export function useEvents() {
 // MATERIALS
 // ============================================================
 export function useMaterials(clientId: string | undefined) {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       if (!clientId) return { data: [], error: null };
       const { data, error } = await supabase
@@ -595,7 +614,7 @@ export async function approveMaterial(id: string) {
 // REPORTS
 // ============================================================
 export function useReports(clientId?: string) {
-  return useQuery<any[]>(
+  return useArrayQuery<any>(
     async () => {
       let q = supabase
         .from("reports")
@@ -824,7 +843,7 @@ export function useAdminOverview() {
 }
 
 export function useClientsByState() {
-  return useQuery<{ state: string; count: number; revenue: number }[]>(
+  return useArrayQuery<{ state: string; count: number; revenue: number }>(
     async () => {
       const { data, error } = await supabase
         .from("clients").select("state, mrr").not("state", "is", null);
