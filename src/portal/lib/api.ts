@@ -99,6 +99,73 @@ export function useClientsWithManager() {
   );
 }
 
+/** Detalhe completo de um cliente: dados + manager + métricas agregadas + integrações */
+export function useClientDetail(clientId: string | undefined) {
+  return useQuery<any>(
+    async () => {
+      if (!clientId) return { data: null, error: null };
+      const [
+        { data: client },
+        { data: integrations },
+        { data: contract },
+        { data: invoices },
+        { data: campaigns },
+        { data: tasks },
+        { data: events },
+      ] = await Promise.all([
+        supabase.from("clients").select("*, manager:profiles!clients_manager_id_fkey(id, full_name, email)").eq("id", clientId).single(),
+        supabase.from("integrations").select("provider, status, account_name, last_sync_at").eq("client_id", clientId),
+        supabase.from("contracts").select("*").eq("client_id", clientId).order("start_date", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("invoices").select("*").eq("client_id", clientId).order("due_date", { ascending: false }).limit(10),
+        supabase.from("campaigns").select("*").eq("client_id", clientId),
+        supabase.from("tasks").select("*").eq("client_id", clientId).order("due_date").limit(10),
+        supabase.from("events").select("*").eq("client_id", clientId).gte("starts_at", new Date().toISOString()).order("starts_at").limit(5),
+      ]);
+      return {
+        data: {
+          ...client,
+          manager_name: client?.manager?.full_name ?? null,
+          manager_email: client?.manager?.email ?? null,
+          integrations: integrations ?? [],
+          contract,
+          invoices: invoices ?? [],
+          campaigns: campaigns ?? [],
+          tasks: tasks ?? [],
+          events: events ?? [],
+        },
+        error: null,
+      };
+    },
+    [clientId]
+  );
+}
+
+export async function createClient(opts: Partial<Client> & { name: string }) {
+  const payload: any = {
+    name: opts.name,
+    type: opts.type ?? null,
+    email: opts.email ?? null,
+    city: opts.city ?? null,
+    state: opts.state ?? null,
+    avatar: opts.avatar ?? opts.name.slice(0, 2).toUpperCase(),
+    color: opts.color ?? "#e01c1c",
+    status: opts.status ?? "pending",
+    plan: opts.plan ?? "standard",
+    mrr: opts.mrr ?? 0,
+    health_score: opts.health_score ?? 50,
+    manager_id: opts.manager_id ?? null,
+  };
+  return supabase.from("clients").insert(payload).select().single();
+}
+
+export async function updateClient(id: string, patch: Partial<Client>) {
+  return supabase.from("clients").update(patch).eq("id", id).select().single();
+}
+
+export async function deleteClient(id: string) {
+  return supabase.from("clients").delete().eq("id", id);
+}
+
 /** Retorna o primeiro client vinculado ao usuário logado (caso cliente). */
 export function useMyClient() {
   return useQuery<Client | null>(
