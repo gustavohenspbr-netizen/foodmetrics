@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useUnreadCount } from "../lib/api";
 import {
   LogOut,
   Settings,
@@ -36,6 +37,7 @@ interface NavItem {
 export const ADMIN_NAV: NavItem[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Visão Geral", section: "Início" },
   { id: "clients", icon: Users, label: "Clientes", section: "Operação" },
+  { id: "messages", icon: MessageSquare, label: "Mensagens", section: "Operação" },
   { id: "traffic", icon: Activity, label: "Operação de Tráfego", section: "Operação" },
   { id: "crm", icon: Briefcase, label: "CRM", section: "Operação" },
   { id: "schedule", icon: Calendar, label: "Agenda", section: "Operação" },
@@ -76,6 +78,7 @@ interface SidebarProps {
 
 export function Sidebar({ type, active, setActive, pendingCount = 0, clientInfo }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const unreadMessages = useUnreadCount();
 
   function logout() {
     sessionStorage.clear();
@@ -153,7 +156,10 @@ export function Sidebar({ type, active, setActive, pendingCount = 0, clientInfo 
               .filter((n) => n.section === section)
               .map(({ id, icon: Icon, label, badge }) => {
                 const isActive = active === id;
-                const showBadge = badge ?? (type === "admin" && id === "clients" ? pendingCount : undefined);
+                // Badge dinâmico: pra "messages" usa unread real; pra "clients" usa pendingCount
+                let showBadge: number | string | undefined = badge;
+                if (id === "messages" && unreadMessages > 0) showBadge = unreadMessages;
+                else if (type === "admin" && id === "clients" && pendingCount > 0) showBadge = pendingCount;
                 return (
                   <button
                     key={id}

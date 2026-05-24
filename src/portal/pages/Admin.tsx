@@ -12,6 +12,7 @@ import { TeamView } from "../views/admin/TeamView";
 import { FinanceView } from "../views/admin/FinanceView";
 import { ContractsView } from "../views/admin/ContractsView";
 import { ReportsView } from "../views/admin/ReportsView";
+import { MessagesView } from "../views/admin/MessagesView";
 
 export function AdminPage() {
   const [active, setActive] = useState("dashboard");
@@ -63,6 +64,7 @@ export function AdminPage() {
           <div className="max-w-[1600px] mx-auto">
             {active === "dashboard" && <DashboardView />}
             {active === "clients" && <ClientsView />}
+            {active === "messages" && <MessagesView />}
             {active === "traffic" && <TrafficView />}
             {active === "crm" && <CRMView />}
             {active === "schedule" && <ScheduleView />}

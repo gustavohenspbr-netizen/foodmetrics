@@ -634,17 +634,169 @@ export function useReports(clientId?: string) {
 // ============================================================
 // MESSAGES (chat) — com realtime
 // ============================================================
-export function useConversation(clientId: string | undefined) {
-  const [conversationId, setConversationId] = useState<string | null>(null);
+
+/**
+ * Marca como lida todas as mensagens da conversa que NÃO foram enviadas pelo user atual.
+ */
+export async function markMessagesRead(conversationId: string) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return;
+  await supabase
+    .from("messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("conversation_id", conversationId)
+    .is("read_at", null)
+    .neq("sender_id", u.user.id);
+}
+
+/**
+ * Lista todas as conversations (pra inbox admin) OU filtradas por client_id (pra cliente).
+ * Retorna conversation + cliente + última mensagem + contagem de não lidas.
+ */
+export function useConversationsList(clientId?: string) {
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) { setLoading(false); return; }
+
+    let q = supabase
+      .from("conversations")
+      .select("*, client:clients(id, name, avatar, color)")
+      .order("last_message_at", { ascending: false });
+    if (clientId) q = q.eq("client_id", clientId);
+    const { data: convs } = await q;
+    if (!convs) { setConversations([]); setLoading(false); return; }
+
+    // Pra cada conv, busca última mensagem + count de não lidas
+    const enriched = await Promise.all(
+      convs.map(async (c: any) => {
+        const { data: lastMsg } = await supabase
+          .from("messages")
+          .select("content, created_at, sender_id")
+          .eq("conversation_id", c.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const { count } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .eq("conversation_id", c.id)
+          .is("read_at", null)
+          .neq("sender_id", u.user!.id);
+        return { ...c, lastMessage: lastMsg, unreadCount: count ?? 0 };
+      })
+    );
+    setConversations(enriched);
+    setLoading(false);
+  }, [clientId]);
+
+  useEffect(() => {
+    refetch();
+    // Realtime: novas mensagens em qualquer conversation atualizam a lista
+    const channel = supabase
+      .channel("conv-list")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
+        refetch();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, () => {
+        refetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refetch]);
+
+  return { conversations, loading, refetch };
+}
+
+/**
+ * Hook único — abre uma conversation pelo ID (admin escolhendo da inbox).
+ * Carrega mensagens, marca como lidas e escuta realtime.
+ */
+export function useConversationMessages(conversationId: string | null) {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!clientId) return;
+    if (!conversationId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
+    setLoading(true);
     (async () => {
-      // Pega ou cria conversation
-      let { data: convs } = await supabase
+      const { data: msgs } = await supabase
+        .from("messages")
+        .select("*, sender:profiles!messages_sender_id_fkey(full_name, avatar_url, role)")
+        .eq("conversation_id", conversationId)
+        .order("created_at");
+      if (!cancelled) {
+        setMessages(msgs ?? []);
+        setLoading(false);
+        // Marca como lidas ao abrir
+        markMessagesRead(conversationId);
+      }
+    })();
+
+    const channel = supabase
+      .channel(`msgs:${conversationId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        async (payload) => {
+          // Busca a mensagem completa com info do sender
+          const { data: full } = await supabase
+            .from("messages")
+            .select("*, sender:profiles!messages_sender_id_fkey(full_name, avatar_url, role)")
+            .eq("id", (payload.new as any).id)
+            .single();
+          if (full) setMessages((prev) => [...prev, full]);
+          // Auto-marca como lida se for de outra pessoa
+          markMessagesRead(conversationId);
+        }
+      )
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [conversationId]);
+
+  return { messages, loading };
+}
+
+/**
+ * Envia mensagem na conversation. Detecta automaticamente sender_type pelo role.
+ */
+export async function sendMessage(conversationId: string, content: string) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return { error: { message: "Não autenticado" } };
+  const { data: profile } = await supabase
+    .from("profiles").select("role").eq("id", u.user.id).single();
+  const isStaff = ["admin", "manager", "support"].includes((profile as any)?.role);
+  const { error } = await supabase.from("messages").insert({
+    conversation_id: conversationId,
+    sender_id: u.user.id,
+    sender_type: isStaff ? "agency" : "client",
+    content,
+  });
+  await supabase
+    .from("conversations")
+    .update({ last_message_at: new Date().toISOString() })
+    .eq("id", conversationId);
+  return { error };
+}
+
+/**
+ * Pra cliente: pega ou cria a conversation default do client.
+ */
+export function useClientConversation(clientId: string | undefined) {
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clientId) return;
+    (async () => {
+      const { data: convs } = await supabase
         .from("conversations")
         .select("id")
         .eq("client_id", clientId)
@@ -659,54 +811,41 @@ export function useConversation(clientId: string | undefined) {
           .single();
         convId = created?.id;
       }
-      if (cancelled || !convId) return;
-      setConversationId(convId);
-
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("*, sender:profiles!messages_sender_id_fkey(full_name, avatar_url)")
-        .eq("conversation_id", convId)
-        .order("created_at");
-      if (!cancelled) {
-        setMessages(msgs ?? []);
-        setLoading(false);
-      }
-
-      // Realtime
-      const channel = supabase
-        .channel(`messages:${convId}`)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${convId}` },
-          (payload) => {
-            setMessages((prev) => [...prev, payload.new]);
-          }
-        )
-        .subscribe();
-      return () => { supabase.removeChannel(channel); };
+      setConversationId(convId ?? null);
     })();
-    return () => { cancelled = true; };
   }, [clientId]);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!conversationId) return;
-    const { data: u } = await supabase.auth.getUser();
-    const { data: profile } = await supabase
-      .from("profiles").select("role").eq("id", u.user?.id ?? "").single();
-    const isStaff = ["admin", "manager", "support"].includes((profile as any)?.role);
-    await supabase.from("messages").insert({
-      conversation_id: conversationId,
-      sender_id: u.user?.id,
-      sender_type: isStaff ? "agency" : "client",
-      content: text,
-    });
-    await supabase
-      .from("conversations")
-      .update({ last_message_at: new Date().toISOString() })
-      .eq("id", conversationId);
-  }, [conversationId]);
+  return conversationId;
+}
 
-  return { messages, loading, sendMessage };
+/**
+ * Conta mensagens não lidas pro user atual em TODAS as conversations que tem acesso.
+ * Usado pelo badge do sidebar.
+ */
+export function useUnreadCount() {
+  const [count, setCount] = useState(0);
+
+  const refetch = useCallback(async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { count: n } = await supabase
+      .from("messages")
+      .select("*", { count: "exact", head: true })
+      .is("read_at", null)
+      .neq("sender_id", u.user.id);
+    setCount(n ?? 0);
+  }, []);
+
+  useEffect(() => {
+    refetch();
+    const channel = supabase
+      .channel("unread-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => refetch())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refetch]);
+
+  return count;
 }
 
 // ============================================================
