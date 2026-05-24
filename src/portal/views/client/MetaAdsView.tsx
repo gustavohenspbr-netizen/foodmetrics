@@ -1,153 +1,111 @@
 import React from "react";
-import { Eye, MousePointer, Image as ImageIcon, Video, DollarSign, Filter, Users } from "lucide-react";
+import { Heart, Eye, Target, DollarSign, Image as ImageIcon, Film } from "lucide-react";
 import { MetricCard } from "../../components/MetricCard";
-import { MOCK_META_CAMPAIGNS } from "../../lib/mockData";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { DataTable, type Column } from "../../components/DataTable";
+import { Card, CardHeader } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Skeleton } from "../../components/ui/Skeleton";
+import { fmt } from "../../lib/format";
+import { useMyClient, useCampaigns } from "../../lib/api";
 
 export function MetaAdsView() {
-  const chartData = [
-    { name: "S1", alcance: 40000, engajamento: 2400 },
-    { name: "S2", alcance: 30000, engajamento: 1398 },
-    { name: "S3", alcance: 20000, engajamento: 9800 },
-    { name: "S4", alcance: 27800, engajamento: 3908 },
+  const { data: client } = useMyClient();
+  const { data: campaigns = [], loading } = useCampaigns(client?.id, "meta");
+
+  const totalSpend = campaigns.reduce((s, c: any) => s + c.spend, 0);
+  const totalReach = campaigns.reduce((s, c: any) => s + c.reach, 0);
+  const totalConv = campaigns.reduce((s, c: any) => s + c.conversions, 0);
+  const avgCtr = campaigns.length ? campaigns.reduce((s, c: any) => s + c.ctr, 0) / campaigns.length : 0;
+
+  const columns: Column<any>[] = [
+    {
+      key: "name",
+      header: "Campanha",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          {row.name.toLowerCase().includes("reels") ? (
+            <Film size={14} className="text-pink-500" />
+          ) : (
+            <ImageIcon size={14} className="text-blue-500" />
+          )}
+          <span className="text-[13px] font-bold text-slate-900 dark:text-white">{row.name}</span>
+        </div>
+      ),
+    },
+    { key: "status", header: "Status",
+      render: (row) => <Badge tone={row.status === "active" ? "success" : "neutral"} dot={row.status === "active"}>{row.status === "active" ? "Ativa" : "Pausada"}</Badge> },
+    { key: "spend", header: "Investido", align: "right",
+      render: (row) => <span className="font-bold text-slate-900 dark:text-white tabular-nums">{fmt.currency(row.spend)}</span> },
+    { key: "reach", header: "Alcance", align: "right",
+      render: (row) => <span className="font-bold text-slate-900 dark:text-white tabular-nums">{fmt.numberCompact(row.reach)}</span> },
+    { key: "ctr", header: "CTR", align: "right",
+      render: (row) => <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{row.ctr.toFixed(2)}%</span> },
+    { key: "conversions", header: "Conv.", align: "right",
+      render: (row) => <span className="font-bold text-blue-600 dark:text-blue-400 tabular-nums">{row.conversions}</span> },
   ];
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png" alt="Meta Ads" className="w-6 h-6" />
-            Performance no Meta Ads
-          </h2>
-          <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 mt-1">
-            Instagram, Facebook e Messenger
+          <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight">Meta Ads</h2>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            Facebook + Instagram — Feed, Stories, Reels
           </p>
         </div>
-        <div className="flex gap-2">
-          <span className="px-3 py-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg text-[12px] font-bold border border-indigo-200 dark:border-indigo-500/20">Pixel Instalado</span>
-        </div>
+        <Badge tone="success" dot>Conta sincronizada</Badge>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard label="Investimento" value="R$ 3.850" sub="+5% vs mês ant." up icon={DollarSign} color="text-indigo-600 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-500/10" />
-        <MetricCard label="Alcance Total" value="125.6k" sub="+18% vs mês ant." up icon={Eye} color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-500/10" />
-        <MetricCard label="Cliques no Link" value="4.320" sub="+12% vs mês ant." up icon={MousePointer} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-500/10" />
-        <MetricCard label="Novos Seguidores" value="342" sub="+3% vs mês ant." up icon={Users} color="text-pink-600 dark:text-pink-400" bg="bg-pink-50 dark:bg-pink-500/10" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <MetricCard label="Investimento" value={fmt.currency(totalSpend)} delta={9.5} icon={DollarSign} color="#1877f2" />
+        <MetricCard label="Alcance" value={fmt.numberCompact(totalReach)} delta={18.4} icon={Eye} color="#e4405f" />
+        <MetricCard label="CTR Médio" value={`${avgCtr.toFixed(1)}%`} delta={4.2} icon={Heart} color="#a855f7" />
+        <MetricCard label="Conversões" value={fmt.number(totalConv)} delta={26} icon={Target} color="#10b981" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-8">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Alcance vs Engajamento Mensal</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.4} vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 13, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                <YAxis yAxisId="left" orientation="left" tick={{ fill: "#64748b", fontSize: 13, fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fill: "#64748b", fontSize: 13, fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{fill: 'transparent'}} content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-lg">
-                        <p className="text-[13px] font-bold text-slate-900 dark:text-white mb-2">{label}</p>
-                        {payload.map((p: any) => (
-                          <p key={p.name} style={{ color: p.color }} className="text-[13px] font-bold">
-                            {p.name}: {p.value}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }} />
-                <Bar yAxisId="left" dataKey="alcance" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Alcance" />
-                <Bar yAxisId="right" dataKey="engajamento" fill="#ec4899" radius={[4, 4, 0, 0]} name="Engajamento" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
-            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800/50">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Campanhas Ativas</h2>
-              <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                <Filter size={18} />
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-[#F8FAFC] dark:bg-[#0B1120]/50 border-b border-slate-100 dark:border-slate-800/50">
-                    <th className="px-8 py-4 text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Campanha</th>
-                    <th className="px-8 py-4 text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Alcance</th>
-                    <th className="px-8 py-4 text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Cliques</th>
-                    <th className="px-8 py-4 text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">CTR</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
-                  {MOCK_META_CAMPAIGNS.map((camp) => (
-                    <tr key={camp.id} className="hover:bg-[#F8FAFC] dark:hover:bg-[#0B1120]/30 transition-colors">
-                      <td className="px-8 py-5">
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          {camp.name}
-                          {camp.status === 'Ativa' && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
-                        </p>
-                      </td>
-                      <td className="px-8 py-5 text-[14px] font-bold text-slate-600 dark:text-slate-300">{camp.reach.toLocaleString('pt-BR')}</td>
-                      <td className="px-8 py-5 text-[14px] font-bold text-indigo-600 dark:text-indigo-400">{camp.clicks.toLocaleString('pt-BR')}</td>
-                      <td className="px-8 py-5 text-[14px] font-bold text-emerald-600 dark:text-emerald-400">{camp.ctr}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-6">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-6">Formato de Criativo</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#0B1120] border border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 flex items-center justify-center">
-                    <Video size={20} />
-                  </div>
-                  <span className="font-bold text-[14px] text-slate-900 dark:text-white">Vídeos (Reels/Feed)</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2">
+          <CardHeader title="Reels com melhor performance" subtitle="Ordem por CTR" />
+          <div className="space-y-3">
+            {[
+              { title: "Bastidores da cozinha — Whopper sendo montado", views: "220k", ctr: "5.4%" },
+              { title: "Cliente reagindo ao Stacker Quádruplo", views: "184k", ctr: "5.1%" },
+              { title: "Top 5 combos mais pedidos da semana", views: "142k", ctr: "4.8%" },
+            ].map((r, i) => (
+              <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200/60 dark:border-slate-800/60">
+                <div className="w-12 h-16 rounded-lg bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                  <Film size={18} className="text-white" />
                 </div>
-                <span className="text-[16px] font-extrabold text-slate-900 dark:text-white">74%</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{r.title}</p>
+                  <p className="text-[11px] text-slate-500 font-semibold mt-0.5">{r.views} views</p>
+                </div>
+                <Badge tone="success">CTR {r.ctr}</Badge>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#0B1120] border border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                    <ImageIcon size={20} />
-                  </div>
-                  <span className="font-bold text-[14px] text-slate-900 dark:text-white">Imagens (Carrossel)</span>
-                </div>
-                <span className="text-[16px] font-extrabold text-slate-900 dark:text-white">26%</span>
-              </div>
-            </div>
+            ))}
           </div>
+        </Card>
 
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-6">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-6">Públicos que mais Engajam</h3>
-            <div className="space-y-3">
-              {[
-                { term: "Mulheres 25-34 anos", pos: 1 },
-                { term: "Interesse em Gastronomia", pos: 2 },
-                { term: "Raio de 5km do Local", pos: 3 },
-              ].map(t => (
-                <div key={t.term} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-md bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[11px] font-bold">
-                    #{t.pos}
-                  </div>
-                  <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 truncate">{t.term}</p>
-                </div>
-              ))}
-            </div>
+        <Card>
+          <CardHeader title="Públicos salvos" />
+          <div className="space-y-3">
+            {[
+              { name: "Compradores Últimos 30d", size: "4.2k" },
+              { name: "Visitantes Site Sem Compra", size: "12k" },
+              { name: "Lookalike 1% (Top Clientes)", size: "180k" },
+            ].map((a, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#0B1120]">
+                <span className="text-[12px] font-bold text-slate-700 dark:text-slate-300">{a.name}</span>
+                <Badge tone="brand">{a.size}</Badge>
+              </div>
+            ))}
           </div>
-        </div>
+        </Card>
       </div>
+
+      {loading ? <Skeleton className="h-64 w-full" /> : (
+        <DataTable data={campaigns} columns={columns} rowKey={(r) => r.id} emptyTitle="Sem campanhas Meta" />
+      )}
     </div>
   );
 }

@@ -1,43 +1,43 @@
 import React, { useState } from "react";
-import { Plus, Filter, Eye, MapPin, Mail } from "lucide-react";
-import { MOCK_CLIENTS } from "../../lib/mockData";
+import { Plus, Filter, Eye, MapPin } from "lucide-react";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Avatar } from "../../components/ui/Avatar";
 import { ProgressBar } from "../../components/ui/ProgressBar";
 import { Tabs } from "../../components/ui/Tabs";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { fmt } from "../../lib/format";
-
-type Client = (typeof MOCK_CLIENTS)[number];
+import { useClientsWithManager } from "../../lib/api";
 
 export function ClientsView() {
   const [filter, setFilter] = useState("all");
+  const { data: clients = [], loading } = useClientsWithManager();
 
   const tabs = [
-    { id: "all", label: "Todos", count: MOCK_CLIENTS.length },
-    { id: "active", label: "Ativos", count: MOCK_CLIENTS.filter((c) => c.status === "active").length },
-    { id: "pending", label: "Pendentes", count: MOCK_CLIENTS.filter((c) => c.status === "pending").length },
-    { id: "risk", label: "Em risco", count: MOCK_CLIENTS.filter((c) => c.health < 70).length },
+    { id: "all", label: "Todos", count: clients.length },
+    { id: "active", label: "Ativos", count: clients.filter((c: any) => c.status === "active").length },
+    { id: "pending", label: "Pendentes", count: clients.filter((c: any) => c.status === "pending").length },
+    { id: "risk", label: "Em risco", count: clients.filter((c: any) => c.health_score < 70).length },
   ];
 
-  const data = MOCK_CLIENTS.filter((c) => {
+  const data = clients.filter((c: any) => {
     if (filter === "all") return true;
     if (filter === "active") return c.status === "active";
     if (filter === "pending") return c.status === "pending";
-    if (filter === "risk") return c.health < 70;
+    if (filter === "risk") return c.health_score < 70;
     return true;
   });
 
-  const columns: Column<Client>[] = [
+  const columns: Column<any>[] = [
     {
-      key: "restaurant",
+      key: "name",
       header: "Restaurante",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <Avatar name={row.restaurant} color={row.color} size="md" />
+          <Avatar name={row.name} color={row.color} size="md" />
           <div className="min-w-0">
-            <p className="text-[13px] font-bold text-slate-900 dark:text-white">{row.restaurant}</p>
+            <p className="text-[13px] font-bold text-slate-900 dark:text-white">{row.name}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{row.type}</p>
           </div>
         </div>
@@ -49,7 +49,7 @@ export function ClientsView() {
       render: (row) => (
         <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-600 dark:text-slate-300">
           <MapPin size={11} className="text-slate-400" />
-          {row.city}
+          {row.city ?? "—"}
         </span>
       ),
     },
@@ -59,30 +59,30 @@ export function ClientsView() {
       align: "right",
       render: (row) => (
         <span className="text-[13px] font-bold text-slate-900 dark:text-white tabular-nums">
-          {fmt.currency(row.mrr)}
+          {fmt.currency(Number(row.mrr ?? 0))}
         </span>
       ),
     },
     {
-      key: "health",
+      key: "health_score",
       header: "Health Score",
       width: "180px",
       render: (row) => (
         <div className="w-32">
           <ProgressBar
-            value={row.health}
-            tone={row.health >= 80 ? "success" : row.health >= 60 ? "warning" : "danger"}
+            value={row.health_score}
+            tone={row.health_score >= 80 ? "success" : row.health_score >= 60 ? "warning" : "danger"}
             size="sm"
           />
-          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1">{row.health}/100</p>
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1">{row.health_score}/100</p>
         </div>
       ),
     },
     {
-      key: "manager",
+      key: "manager_name",
       header: "Gestor",
       render: (row) => (
-        <span className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">{row.manager}</span>
+        <span className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">{row.manager_name ?? "—"}</span>
       ),
     },
     {
@@ -100,9 +100,7 @@ export function ClientsView() {
       sortable: false,
       align: "right",
       render: () => (
-        <Button size="xs" variant="ghost" icon={Eye}>
-          Ver portal
-        </Button>
+        <Button size="xs" variant="ghost" icon={Eye}>Ver portal</Button>
       ),
     },
   ];
@@ -111,34 +109,34 @@ export function ClientsView() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight">
-            Clientes
-          </h2>
+          <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight">Clientes</h2>
           <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-            {MOCK_CLIENTS.length} restaurantes — {MOCK_CLIENTS.filter((c) => c.status === "active").length} ativos
+            {loading ? "..." : `${clients.length} restaurantes — ${clients.filter((c: any) => c.status === "active").length} ativos`}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" icon={Filter} size="sm">
-            Filtros
-          </Button>
-          <Button variant="primary" icon={Plus} size="sm">
-            Adicionar Cliente
-          </Button>
+          <Button variant="outline" icon={Filter} size="sm">Filtros</Button>
+          <Button variant="primary" icon={Plus} size="sm">Adicionar Cliente</Button>
         </div>
       </div>
 
       <Tabs tabs={tabs} active={filter} onChange={setFilter} variant="pills" />
 
-      <DataTable
-        data={data}
-        columns={columns}
-        search
-        searchKeys={["restaurant", "email", "city", "manager"]}
-        searchPlaceholder="Buscar por restaurante, email, cidade..."
-        rowKey={(r) => r.id}
-        pageSize={8}
-      />
+      {loading ? (
+        <div className="space-y-2">
+          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+        </div>
+      ) : (
+        <DataTable
+          data={data}
+          columns={columns}
+          search
+          searchKeys={["name", "email", "city", "manager_name"]}
+          searchPlaceholder="Buscar por restaurante, email, cidade..."
+          rowKey={(r) => r.id}
+          pageSize={8}
+        />
+      )}
     </div>
   );
 }

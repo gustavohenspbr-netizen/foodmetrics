@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { Bell, Check, MessageSquare, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Dropdown } from "./ui/Dropdown";
-import { MOCK_NOTIFICATIONS } from "../lib/mockData";
+import { useNotifications } from "../lib/api";
 import { cn } from "../lib/cn";
 
 const ICON_MAP: Record<string, any> = {
   alert: AlertTriangle,
-  check: CheckCircle2,
-  file: FileText,
+  success: CheckCircle2,
+  info: FileText,
   message: MessageSquare,
 };
 
@@ -18,13 +18,19 @@ const TONE_MAP: Record<string, string> = {
   message: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
 };
 
-export function NotificationBell() {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const unread = notifications.filter((n) => !n.read).length;
+function timeAgo(iso: string): string {
+  const now = Date.now();
+  const t = new Date(iso).getTime();
+  const diff = Math.floor((now - t) / 1000);
+  if (diff < 60) return "agora";
+  if (diff < 3600) return `há ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)} h`;
+  return `há ${Math.floor(diff / 86400)} d`;
+}
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }
+export function NotificationBell() {
+  const { notifications, markAllRead } = useNotifications();
+  const unread = notifications.filter((n) => !n.read_at).length;
 
   return (
     <Dropdown
@@ -49,46 +55,34 @@ export function NotificationBell() {
           </p>
         </div>
         {unread > 0 && (
-          <button
-            onClick={markAllRead}
-            className="text-[11px] font-bold text-[#e01c1c] hover:underline flex items-center gap-1"
-          >
+          <button onClick={markAllRead} className="text-[11px] font-bold text-[#e01c1c] hover:underline flex items-center gap-1">
             <Check size={12} /> Marcar todas
           </button>
         )}
       </div>
 
       <div className="max-h-[400px] overflow-y-auto">
-        {notifications.map((n) => {
-          const Icon = ICON_MAP[n.icon] ?? Bell;
+        {notifications.length === 0 ? (
+          <p className="text-center text-slate-400 py-8 text-[13px] font-medium">Sem notificações</p>
+        ) : notifications.map((n) => {
+          const Icon = ICON_MAP[n.type] ?? Bell;
           return (
-            <button
-              key={n.id}
-              className={cn(
-                "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/40 last:border-b-0",
-                !n.read && "bg-[#e01c1c]/[0.02] dark:bg-[#e01c1c]/[0.04]"
-              )}
-            >
+            <button key={n.id} className={cn(
+              "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/40 last:border-b-0",
+              !n.read_at && "bg-[#e01c1c]/[0.02] dark:bg-[#e01c1c]/[0.04]"
+            )}>
               <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0", TONE_MAP[n.type] ?? TONE_MAP.info)}>
                 <Icon size={16} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={cn("text-[13px] leading-tight text-slate-900 dark:text-white", !n.read && "font-bold", n.read && "font-semibold")}>
-                  {n.title}
-                </p>
+                <p className={cn("text-[13px] leading-tight text-slate-900 dark:text-white", !n.read_at ? "font-bold" : "font-semibold")}>{n.title}</p>
                 <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{n.description}</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">{n.time}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">{timeAgo(n.created_at)}</p>
               </div>
-              {!n.read && <span className="w-2 h-2 rounded-full bg-[#e01c1c] flex-shrink-0 mt-1.5" />}
+              {!n.read_at && <span className="w-2 h-2 rounded-full bg-[#e01c1c] flex-shrink-0 mt-1.5" />}
             </button>
           );
         })}
-      </div>
-
-      <div className="border-t border-slate-100 dark:border-slate-800/60">
-        <button className="w-full py-3 text-[12px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-          Ver todas as notificações
-        </button>
       </div>
     </Dropdown>
   );

@@ -1,86 +1,79 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Filter, Pause, Play, AlertTriangle, Settings2 } from "lucide-react";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Avatar } from "../../components/ui/Avatar";
-import { Card } from "../../components/ui/Card";
 import { Tabs } from "../../components/ui/Tabs";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { MetricCard } from "../../components/MetricCard";
 import { fmt } from "../../lib/format";
-import { MOCK_CLIENTS, MOCK_GOOGLE_CAMPAIGNS, MOCK_META_CAMPAIGNS } from "../../lib/mockData";
+import { supabase } from "../../lib/supabase";
 
-type CrossCampaign = {
+type Row = {
   id: string;
   client: { name: string; color: string; avatar: string };
   name: string;
-  channel: "Google" | "Meta";
+  channel: "google" | "meta";
   status: string;
   spend: number;
   conversions: number;
-  roas?: number;
   cpa: number;
   alert: boolean;
 };
 
-const ALL_CAMPAIGNS: CrossCampaign[] = [
-  ...MOCK_GOOGLE_CAMPAIGNS.flatMap((c, i) => {
-    const client = MOCK_CLIENTS[i % MOCK_CLIENTS.length];
-    return [
-      {
-        id: `${c.id}-${client.id}`,
-        client: { name: client.restaurant, color: client.color, avatar: client.avatar },
-        name: c.name,
-        channel: "Google" as const,
-        status: c.status,
-        spend: c.spend,
-        conversions: c.conversions,
-        roas: c.roas,
-        cpa: c.cpa,
-        alert: c.cpa > 10,
-      },
-    ];
-  }),
-  ...MOCK_META_CAMPAIGNS.flatMap((c, i) => {
-    const client = MOCK_CLIENTS[(i + 2) % MOCK_CLIENTS.length];
-    return [
-      {
-        id: `${c.id}-${client.id}`,
-        client: { name: client.restaurant, color: client.color, avatar: client.avatar },
-        name: c.name,
-        channel: "Meta" as const,
-        status: c.status,
-        spend: c.spend,
-        conversions: c.conversions,
-        cpa: c.cpa,
-        alert: c.cpa > 6,
-      },
-    ];
-  }),
-];
-
 export function TrafficView() {
   const [filter, setFilter] = useState("all");
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: campaigns }, { data: metrics }] = await Promise.all([
+        supabase.from("campaigns").select("*, client:clients(name, color, avatar)"),
+        supabase.from("metrics_daily")
+          .select("campaign_id, spend, conversions")
+          .gte("date", new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)),
+      ]);
+      const result: Row[] = (campaigns ?? []).map((c: any) => {
+        const m = (metrics ?? []).filter((x: any) => x.campaign_id === c.id);
+        const spend = m.reduce((s, x: any) => s + Number(x.spend ?? 0), 0);
+        const conversions = m.reduce((s, x: any) => s + Number(x.conversions ?? 0), 0);
+        const cpa = conversions > 0 ? spend / conversions : 0;
+        return {
+          id: c.id,
+          client: c.client ?? { name: "—", color: "#888", avatar: "?" },
+          name: c.name,
+          channel: c.channel,
+          status: c.status === "active" ? "Ativa" : c.status === "paused" ? "Pausada" : c.status,
+          spend, conversions, cpa,
+          alert: cpa > (c.channel === "google" ? 10 : 6),
+        };
+      });
+      setRows(result);
+      setLoading(false);
+    })();
+  }, []);
 
   const tabs = [
-    { id: "all", label: "Todas", count: ALL_CAMPAIGNS.length },
-    { id: "google", label: "Google", count: ALL_CAMPAIGNS.filter((c) => c.channel === "Google").length },
-    { id: "meta", label: "Meta", count: ALL_CAMPAIGNS.filter((c) => c.channel === "Meta").length },
-    { id: "alerts", label: "Atenção", count: ALL_CAMPAIGNS.filter((c) => c.alert).length },
+    { id: "all", label: "Todas", count: rows.length },
+    { id: "google", label: "Google", count: rows.filter((r) => r.channel === "google").length },
+    { id: "meta", label: "Meta", count: rows.filter((r) => r.channel === "meta").length },
+    { id: "alerts", label: "Atenção", count: rows.filter((r) => r.alert).length },
   ];
 
-  const data = ALL_CAMPAIGNS.filter((c) => {
+  const data = rows.filter((r) => {
     if (filter === "all") return true;
-    if (filter === "alerts") return c.alert;
-    return c.channel.toLowerCase() === filter;
+    if (filter === "alerts") return r.alert;
+    return r.channel === filter;
   });
 
-  const totalSpend = ALL_CAMPAIGNS.reduce((s, c) => s + c.spend, 0);
-  const totalConv = ALL_CAMPAIGNS.reduce((s, c) => s + c.conversions, 0);
-  const totalAlerts = ALL_CAMPAIGNS.filter((c) => c.alert).length;
-  const avgCpa = totalSpend / totalConv;
+  const totalSpend = rows.reduce((s, r) => s + r.spend, 0);
+  const totalConv = rows.reduce((s, r) => s + r.conversions, 0);
+  const totalAlerts = rows.filter((r) => r.alert).length;
+  const avgCpa = totalConv > 0 ? totalSpend / totalConv : 0;
 
-  const columns: Column<CrossCampaign>[] = [
+  const columns: Column<Row>[] = [
     {
       key: "client",
       header: "Cliente",
@@ -96,8 +89,8 @@ export function TrafficView() {
       header: "Campanha",
       render: (row) => (
         <div className="flex items-center gap-2">
-          <Badge tone={row.channel === "Google" ? "info" : "brand"} size="sm">
-            {row.channel}
+          <Badge tone={row.channel === "google" ? "info" : "brand"} size="sm">
+            {row.channel === "google" ? "Google" : "Meta"}
           </Badge>
           <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">{row.name}</span>
         </div>
@@ -138,12 +131,7 @@ export function TrafficView() {
       key: "alert",
       header: "Alerta",
       align: "center",
-      render: (row) =>
-        row.alert ? (
-          <Badge tone="danger" size="sm" dot>
-            CPA alto
-          </Badge>
-        ) : null,
+      render: (row) => row.alert ? <Badge tone="danger" size="sm" dot>CPA alto</Badge> : null,
     },
     {
       key: "actions",
@@ -163,36 +151,36 @@ export function TrafficView() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight">
-            Operação de Tráfego
-          </h2>
+          <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight">Operação de Tráfego</h2>
           <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
             Comando central — todas as campanhas de todos os clientes
           </p>
         </div>
-        <Button variant="outline" icon={Filter} size="sm">
-          Período
-        </Button>
+        <Button variant="outline" icon={Filter} size="sm">Período</Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <MetricCard label="Verba ativa" value={fmt.currencyCompact(totalSpend)} delta={8.4} icon={Settings2} color="#e01c1c" spark={[14, 16, 17, 18, 19, 20, 22]} />
-        <MetricCard label="Conversões" value={fmt.number(totalConv)} delta={12.6} icon={Play} color="#10b981" spark={[2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0]} />
-        <MetricCard label="CPA médio" value={fmt.currency(avgCpa)} delta={-3.2} deltaLabel="melhor" icon={Pause} color="#ff8732" spark={[6.2, 6.0, 5.8, 5.6, 5.4, 5.3, 5.2]} />
+        <MetricCard label="Verba ativa" value={fmt.currencyCompact(totalSpend)} delta={8.4} icon={Settings2} color="#e01c1c" />
+        <MetricCard label="Conversões" value={fmt.number(totalConv)} delta={12.6} icon={Play} color="#10b981" />
+        <MetricCard label="CPA médio" value={fmt.currency(avgCpa)} delta={-3.2} deltaLabel="melhor" icon={Pause} color="#ff8732" />
         <MetricCard label="Alertas ativos" value={String(totalAlerts)} deltaLabel={totalAlerts ? "Precisa atenção" : "Tudo OK"} icon={AlertTriangle} color={totalAlerts ? "#ef4444" : "#10b981"} />
       </div>
 
       <Tabs tabs={tabs} active={filter} onChange={setFilter} variant="pills" />
 
-      <DataTable
-        data={data}
-        columns={columns}
-        search
-        searchKeys={["name"]}
-        searchPlaceholder="Buscar campanha..."
-        rowKey={(r) => r.id}
-        pageSize={10}
-      />
+      {loading ? (
+        <Skeleton className="h-96 w-full" />
+      ) : (
+        <DataTable
+          data={data}
+          columns={columns}
+          search
+          searchKeys={["name"]}
+          searchPlaceholder="Buscar campanha..."
+          rowKey={(r) => r.id}
+          pageSize={10}
+        />
+      )}
     </div>
   );
 }

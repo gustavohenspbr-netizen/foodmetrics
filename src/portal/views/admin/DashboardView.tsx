@@ -27,25 +27,33 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Avatar } from "../../components/ui/Avatar";
 import { ProgressBar } from "../../components/ui/ProgressBar";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { fmt } from "../../lib/format";
 import {
-  MOCK_ADMIN_OVERVIEW,
-  MOCK_CLIENTS,
-  MOCK_MONTHLY_SPEND,
-  MOCK_CLIENTS_BY_STATE,
-  MOCK_TEAM,
-  MOCK_SCHEDULE_EVENTS,
-} from "../../lib/mockData";
+  useAdminOverview,
+  useClientsWithManager,
+  useClientsByState,
+  useTeam,
+  useEvents,
+} from "../../lib/api";
 
 export function DashboardView() {
-  const o = MOCK_ADMIN_OVERVIEW;
-  const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
-  const atRisk = MOCK_CLIENTS.filter((c) => c.health < 70);
+  const { data: overview, loading: lOverview } = useAdminOverview();
+  const { data: clients = [], loading: lClients } = useClientsWithManager();
+  const { data: byState = [], loading: lByState } = useClientsByState();
+  const { data: team = [], loading: lTeam } = useTeam();
+  const { data: events = [], loading: lEvents } = useEvents();
 
-  const stateHistory = MOCK_MONTHLY_SPEND.map((m) => ({
-    month: m.month,
-    spend: m.google + m.meta,
-  }));
+  const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  const atRisk = (clients ?? []).filter((c: any) => c.health_score < 70);
+
+  const stateHistory = [
+    { month: "Jan", spend: 320000 },
+    { month: "Fev", spend: 345000 },
+    { month: "Mar", spend: 360000 },
+    { month: "Abr", spend: 380000 },
+    { month: "Mai", spend: overview?.totalManaged ?? 425000 },
+  ];
 
   return (
     <div className="space-y-8">
@@ -61,15 +69,19 @@ export function DashboardView() {
             </Badge>
             <h2 className="text-white text-4xl font-extrabold tracking-tight mt-4 leading-tight">
               MRR de{" "}
-              <span className="bg-gradient-to-r from-[#ff8732] to-[#ffba8c] bg-clip-text text-transparent">
-                {fmt.currencyCompact(o.mrr * 1000)}
-              </span>{" "}
-              <span className="text-emerald-400 text-2xl ml-2">+{o.mrrGrowth}%</span>
+              {lOverview ? (
+                <Skeleton className="inline-block w-32 h-10" />
+              ) : (
+                <span className="bg-gradient-to-r from-[#ff8732] to-[#ffba8c] bg-clip-text text-transparent">
+                  {fmt.currencyCompact(overview?.mrr ?? 0)}
+                </span>
+              )}{" "}
+              <span className="text-emerald-400 text-2xl ml-2">+{overview?.mrrGrowth ?? 0}%</span>
             </h2>
             <p className="text-slate-300 text-base font-medium mt-2 max-w-2xl">
-              <span className="text-white font-bold">{o.activeClients} clientes ativos</span> · churn em{" "}
-              <span className="text-emerald-400 font-bold">{o.churnRate}%</span> · você gerencia{" "}
-              <span className="text-white font-bold">{fmt.currencyCompact(o.totalManaged * 1000)}</span> em
+              <span className="text-white font-bold">{overview?.activeClients ?? 0} clientes ativos</span> · churn em{" "}
+              <span className="text-emerald-400 font-bold">{overview?.churnRate ?? 0}%</span> · você gerencia{" "}
+              <span className="text-white font-bold">{fmt.currencyCompact(overview?.totalManaged ?? 0)}</span> em
               investimento mensal para seus clientes.
             </p>
           </div>
@@ -92,36 +104,36 @@ export function DashboardView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <MetricCard
           label="MRR"
-          value={fmt.currencyCompact(o.mrr * 1000)}
-          delta={o.mrrGrowth}
+          value={fmt.currencyCompact(overview?.mrr ?? 0)}
+          delta={overview?.mrrGrowth ?? 0}
           icon={DollarSign}
           color="#10b981"
-          spark={o.mrrHistory}
+          spark={[128, 134, 139, 142, 148, 151, (overview?.mrr ?? 0) / 1000]}
         />
         <MetricCard
           label="Clientes Ativos"
-          value={o.activeClients}
+          value={overview?.activeClients ?? 0}
           delta={4.2}
           icon={Users}
           color="#e01c1c"
-          spark={o.clientsHistory}
+          spark={[18, 19, 20, 21, 22, 23, overview?.activeClients ?? 24]}
         />
         <MetricCard
           label="Verba Gerenciada"
-          value={fmt.currencyCompact(o.totalManaged * 1000)}
+          value={fmt.currencyCompact(overview?.totalManaged ?? 0)}
           delta={6.5}
           icon={Activity}
           color="#ff8732"
-          spark={o.spendHistory}
+          spark={[320, 345, 360, 380, 405, 418, (overview?.totalManaged ?? 0) / 1000]}
         />
         <MetricCard
           label="Churn"
-          value={`${o.churnRate}%`}
+          value={`${overview?.churnRate ?? 0}%`}
           delta={-0.4}
           deltaLabel="vs trimestre"
           icon={TrendingDown}
           color="#3b82f6"
-          spark={[3.2, 2.9, 2.7, 2.5, 2.3, 2.2, 2.1]}
+          spark={[3.2, 2.9, 2.7, 2.5, 2.3, 2.2, overview?.churnRate ?? 2.1]}
         />
       </div>
 
@@ -147,20 +159,8 @@ export function DashboardView() {
                 className="text-slate-200 dark:text-slate-800"
                 vertical={false}
               />
-              <XAxis
-                dataKey="month"
-                stroke="currentColor"
-                className="text-slate-500 text-xs"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="currentColor"
-                className="text-slate-500 text-xs"
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-              />
+              <XAxis dataKey="month" stroke="currentColor" className="text-slate-500 text-xs" tickLine={false} axisLine={false} />
+              <YAxis stroke="currentColor" className="text-slate-500 text-xs" tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "rgba(15,23,42,0.96)",
@@ -172,58 +172,36 @@ export function DashboardView() {
                 }}
                 formatter={(v: number) => fmt.currency(v)}
               />
-              <Area
-                type="monotone"
-                dataKey="spend"
-                stroke="#e01c1c"
-                strokeWidth={2.5}
-                fill="url(#admin-spend)"
-              />
+              <Area type="monotone" dataKey="spend" stroke="#e01c1c" strokeWidth={2.5} fill="url(#admin-spend)" />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard
-          title="Clientes por Estado"
-          subtitle="Distribuição geográfica"
-          height={300}
-        >
-          <ResponsiveContainer>
-            <BarChart data={MOCK_CLIENTS_BY_STATE} layout="vertical" margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="currentColor"
-                className="text-slate-200 dark:text-slate-800"
-                horizontal={false}
-              />
-              <XAxis
-                type="number"
-                stroke="currentColor"
-                className="text-slate-500 text-xs"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                dataKey="state"
-                type="category"
-                stroke="currentColor"
-                className="text-slate-500 text-xs font-bold"
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "rgba(15,23,42,0.96)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 12,
-                  color: "white",
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-              />
-              <Bar dataKey="count" fill="#ff8732" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <ChartCard title="Clientes por Estado" subtitle="Distribuição geográfica" height={300}>
+          {lByState ? (
+            <div className="space-y-3">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+            </div>
+          ) : (
+            <ResponsiveContainer>
+              <BarChart data={byState ?? []} layout="vertical" margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-slate-800" horizontal={false} />
+                <XAxis type="number" stroke="currentColor" className="text-slate-500 text-xs" tickLine={false} axisLine={false} />
+                <YAxis dataKey="state" type="category" stroke="currentColor" className="text-slate-500 text-xs font-bold" tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(15,23,42,0.96)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 12,
+                    color: "white",
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                />
+                <Bar dataKey="count" fill="#ff8732" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
       </div>
 
@@ -233,42 +211,35 @@ export function DashboardView() {
           <CardHeader
             title="Clientes em risco"
             subtitle="Health Score abaixo de 70"
-            action={
-              <Badge tone="danger" dot>
-                {atRisk.length}
-              </Badge>
-            }
+            action={<Badge tone="danger" dot>{atRisk.length}</Badge>}
           />
           <div className="space-y-3.5">
-            {atRisk.map((c) => (
-              <div key={c.id} className="flex items-start gap-3">
-                <Avatar name={c.restaurant} color={c.color} size="md" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">
-                    {c.restaurant}
-                  </p>
-                  <div className="mt-1.5">
-                    <ProgressBar
-                      value={c.health}
-                      tone={c.health < 50 ? "danger" : c.health < 70 ? "warning" : "success"}
-                      size="sm"
-                    />
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-                        Health {c.health}
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-                        {c.manager}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {atRisk.length === 0 && (
+            {lClients ? (
+              [1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)
+            ) : atRisk.length === 0 ? (
               <p className="text-[13px] text-slate-500 dark:text-slate-400 text-center py-6 font-medium">
                 Todos os clientes saudáveis 🎉
               </p>
+            ) : (
+              atRisk.map((c: any) => (
+                <div key={c.id} className="flex items-start gap-3">
+                  <Avatar name={c.name} color={c.color} size="md" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{c.name}</p>
+                    <div className="mt-1.5">
+                      <ProgressBar
+                        value={c.health_score}
+                        tone={c.health_score < 50 ? "danger" : c.health_score < 70 ? "warning" : "success"}
+                        size="sm"
+                      />
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">Health {c.health_score}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{c.manager_name ?? "—"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </Card>
@@ -276,31 +247,23 @@ export function DashboardView() {
         <Card>
           <CardHeader
             title="Equipe"
-            subtitle={`${MOCK_TEAM.filter((t) => t.online).length} online agora`}
-            action={
-              <Button variant="ghost" size="sm" iconRight={ArrowUpRight}>
-                Ver tudo
-              </Button>
-            }
+            subtitle={lTeam ? "..." : `${team.length} membros`}
+            action={<Button variant="ghost" size="sm" iconRight={ArrowUpRight}>Ver tudo</Button>}
           />
           <div className="space-y-3">
-            {MOCK_TEAM.slice(0, 5).map((m) => (
-              <div key={m.id} className="flex items-center gap-3">
-                <Avatar name={m.name} color={m.color} size="md" status={m.online ? "online" : "offline"} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{m.name}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{m.role}</p>
+            {lTeam ? (
+              [1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full" />)
+            ) : (
+              team.map((m: any) => (
+                <div key={m.id} className="flex items-center gap-3">
+                  <Avatar name={m.full_name ?? m.email} color={m.role === 'admin' ? '#0F172A' : m.role === 'manager' ? '#e01c1c' : '#10b981'} size="md" status="online" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{m.full_name ?? m.email}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold capitalize">{m.role}</p>
+                  </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-[12px] font-bold text-slate-900 dark:text-white">
-                    {m.clients} clientes
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                    {m.tasksOpen} tarefas
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
 
@@ -308,46 +271,40 @@ export function DashboardView() {
           <CardHeader
             title="Próximos eventos"
             subtitle="Hoje e amanhã"
-            action={
-              <Button variant="ghost" size="sm" iconRight={ArrowUpRight}>
-                Agenda
-              </Button>
-            }
+            action={<Button variant="ghost" size="sm" iconRight={ArrowUpRight}>Agenda</Button>}
           />
           <div className="space-y-3">
-            {MOCK_SCHEDULE_EVENTS.slice(0, 4).map((e) => {
-              const tones: Record<string, "brand" | "info" | "success" | "warning" | "neutral"> = {
-                onboarding: "brand",
-                report: "info",
-                strategy: "success",
-                internal: "neutral",
-                review: "warning",
-              };
-              return (
-                <div
-                  key={e.id}
-                  className="flex items-start gap-3 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
-                >
-                  <div className="text-center flex-shrink-0">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                      {e.date.split("/")[0]}/{e.date.split("/")[1]}
-                    </p>
-                    <p className="text-[14px] text-slate-900 dark:text-white font-bold leading-none mt-1">
-                      {e.time.split(" - ")[0]}
-                    </p>
+            {lEvents ? (
+              [1,2,3].map(i => <Skeleton key={i} className="h-16 w-full" />)
+            ) : events.length === 0 ? (
+              <p className="text-[13px] text-slate-500 text-center py-4 font-medium">Sem eventos agendados.</p>
+            ) : (
+              events.slice(0, 4).map((e: any) => {
+                const tones: Record<string, "brand" | "info" | "success" | "warning" | "neutral"> = {
+                  onboarding: "brand", report: "info", strategy: "success", internal: "neutral", review: "warning",
+                };
+                const date = new Date(e.starts_at);
+                return (
+                  <div key={e.id} className="flex items-start gap-3 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors cursor-pointer">
+                    <div className="text-center flex-shrink-0">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        {String(date.getDate()).padStart(2, '0')}/{String(date.getMonth() + 1).padStart(2, '0')}
+                      </p>
+                      <p className="text-[14px] text-slate-900 dark:text-white font-bold leading-none mt-1">
+                        {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold text-slate-900 dark:text-white leading-tight">{e.title}</p>
+                      <Badge tone={tones[e.type] ?? "neutral"} size="sm" className="mt-1.5">
+                        {e.client_name ?? "Interno"}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-bold text-slate-900 dark:text-white leading-tight">
-                      {e.title}
-                    </p>
-                    <Badge tone={tones[e.type] ?? "neutral"} size="sm" className="mt-1.5">
-                      {e.client}
-                    </Badge>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </Card>
       </div>
