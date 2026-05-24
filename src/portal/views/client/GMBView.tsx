@@ -33,11 +33,31 @@ export function GMBView() {
         provider="gmb"
         brandColor="#34a853"
         title="Google Meu Negócio"
-        description="Cole o Location ID e Access Token OAuth com permissão de leitura. Métricas de visualizações, ligações, rotas e reviews serão sincronizadas."
+        description="Cole o Location ID e Access Token OAuth. Métricas de visualizações, ligações, rotas e reviews serão sincronizadas."
         fields={[
           { key: "account_id", label: "Location ID", hint: "Formato locations/123456789", required: true },
           { key: "account_name", label: "Nome do local" },
           { key: "access_token", label: "Access Token", type: "password" },
+        ]}
+        quickActions={[
+          { url: "https://business.google.com/locations", label: "Abrir Google Business Profile", description: "Veja seus locais cadastrados" },
+          { url: "https://developers.google.com/oauthplayground/?scope=https://www.googleapis.com/auth/business.manage", label: "Gerar Access Token", description: "OAuth Playground (escopo já correto)" },
+        ]}
+        tutorial={[
+          {
+            title: "Encontrar o Location ID",
+            description: <>Abra o <strong>Google Business Profile</strong>. Clique no local desejado. A URL do navegador contém algo como <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">/locations/123456789</code>. Copie tudo a partir de <strong>locations/</strong>.</>,
+            link: { url: "https://business.google.com/locations", label: "Google Business Profile" },
+          },
+          {
+            title: "Gerar Access Token via OAuth Playground",
+            description: <>Abra o <strong>OAuth Playground</strong> (link já com o escopo <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">business.manage</code>). Clique <strong>"Authorize APIs"</strong> → autorize sua conta → clique <strong>"Exchange authorization code for tokens"</strong> → copie o <strong>access_token</strong>.</>,
+            link: { url: "https://developers.google.com/oauthplayground/?scope=https://www.googleapis.com/auth/business.manage", label: "OAuth Playground (GMB)" },
+          },
+          {
+            title: "Colar e conectar",
+            description: <>Cole as duas info nos campos abaixo. O token dura 1h — pra sync contínua, gere um refresh token no Google Cloud Console.</>,
+          },
         ]}
       />
 

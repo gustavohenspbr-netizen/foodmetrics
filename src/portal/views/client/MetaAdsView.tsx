@@ -58,13 +58,40 @@ export function MetaAdsView() {
         provider="meta_ads"
         brandColor="#1877f2"
         title="Meta Ads (Facebook + Instagram)"
-        description="Cole o Ad Account ID (ex: act_123456789) e um Access Token de longa duração com permissão ads_read. O Pixel ID é opcional mas recomendado para tracking de conversões."
+        description="Cole o Ad Account ID e um Access Token de longa duração com permissão ads_read. O Pixel ID é opcional."
         fields={[
           { key: "account_id", label: "Ad Account ID", hint: "Formato act_NNNNNNNNN", required: true },
           { key: "account_name", label: "Nome da conta de anúncios" },
           { key: "pixel_id", label: "Pixel ID", hint: "Opcional — para eventos de conversão" },
           { key: "access_token", label: "Access Token", type: "password", hint: "Token de longa duração (60d+)" },
         ]}
+        quickActions={[
+          { url: "https://business.facebook.com/settings/ad-accounts", label: "Abrir Meta Business", description: "Lista de Contas de Anúncios" },
+          { url: "https://developers.facebook.com/tools/explorer/", label: "Graph API Explorer", description: "Gerar Access Token aqui" },
+        ]}
+        tutorial={[
+          {
+            title: "Pegar o Ad Account ID",
+            description: <>Abra o <strong>Meta Business Manager</strong> → Configurações → <strong>Contas de Anúncios</strong>. Cada conta tem um ID no formato <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">act_123456789012</code>. Copie o da conta certa.</>,
+            link: { url: "https://business.facebook.com/settings/ad-accounts", label: "Meta Business — Contas" },
+          },
+          {
+            title: "(Opcional) Pegar o Pixel ID",
+            description: <>No <strong>Meta Business</strong>, vá em <strong>Gerenciador de Eventos</strong>. Clique no seu Pixel → o ID aparece embaixo do nome (formato numérico de 15 dígitos).</>,
+            link: { url: "https://business.facebook.com/events_manager2", label: "Gerenciador de Eventos" },
+          },
+          {
+            title: "Gerar Access Token via Graph API Explorer",
+            description: <>Abra o <strong>Graph API Explorer</strong>. No dropdown <strong>"Meta App"</strong>, escolha um app seu (ou crie um novo grátis). Em <strong>"Permissions"</strong> adicione <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">ads_read</code> e <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">ads_management</code>. Clique <strong>"Generate Access Token"</strong> e copie.</>,
+            link: { url: "https://developers.facebook.com/tools/explorer/", label: "Graph API Explorer" },
+          },
+          {
+            title: "Estender pra Token Longa Duração",
+            description: <>O token do Graph Explorer dura 1h. Pra ter validade de 60 dias, use a ferramenta de extensão (link abaixo): cole seu App ID + App Secret + Token curto → ela retorna um token de longa duração. <strong>Cole esse longo aqui no painel.</strong></>,
+            link: { url: "https://developers.facebook.com/tools/debug/accesstoken/", label: "Access Token Debugger" },
+          },
+        ]}
+        oauthNote="Conexão 1-clique via Login do Facebook requer app Meta com revisão de permissões aprovada. Por ora, o método manual via Graph Explorer funciona e é o oficial."
       />
 
       {!integration && (

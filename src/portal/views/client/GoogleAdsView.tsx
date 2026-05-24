@@ -73,12 +73,33 @@ export function GoogleAdsView() {
         provider="google_ads"
         brandColor="#4285f4"
         title="Google Ads"
-        description="Cole o Customer ID (ex: 123-456-7890) e um Developer Token / OAuth token gerado em sua conta. A sincronização puxa campanhas, métricas e termos de busca."
+        description="Cole o Customer ID e um Access Token OAuth. A sincronização puxa campanhas, métricas e termos de busca dos últimos 90 dias."
         fields={[
-          { key: "customer_id", label: "Customer ID", hint: "Encontrado no canto superior direito do Google Ads", required: true },
+          { key: "customer_id", label: "Customer ID", hint: "Formato 123-456-7890", required: true },
           { key: "account_name", label: "Nome da conta", hint: "Apenas para exibição" },
           { key: "access_token", label: "Access Token", type: "password", hint: "OAuth token com escopo /adwords" },
         ]}
+        quickActions={[
+          { url: "https://ads.google.com", label: "Abrir Google Ads", description: "Veja seu Customer ID no canto superior direito" },
+          { url: "https://developers.google.com/oauthplayground/?scope=https://www.googleapis.com/auth/adwords", label: "Gerar Access Token", description: "OAuth Playground (já com escopo correto)" },
+        ]}
+        tutorial={[
+          {
+            title: "Pegar o Customer ID",
+            description: <>Entre no <strong>Google Ads</strong>. No canto superior direito, ao lado do email, aparece um código no formato <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">123-456-7890</code>. Esse é seu Customer ID.</>,
+            link: { url: "https://ads.google.com", label: "Abrir Google Ads" },
+          },
+          {
+            title: "Gerar Access Token via OAuth Playground",
+            description: <>Abra o <strong>OAuth Playground</strong> (link abaixo, já vem com o escopo correto). Clique em <strong>"Authorize APIs"</strong>, escolha sua conta Google. Depois clique em <strong>"Exchange authorization code for tokens"</strong>. Copie o valor de <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">access_token</code>.</>,
+            link: { url: "https://developers.google.com/oauthplayground/?scope=https://www.googleapis.com/auth/adwords", label: "OAuth Playground (Google Ads)" },
+          },
+          {
+            title: "Colar e conectar",
+            description: <>Cole as 2 informações nos campos abaixo. O token tem validade de 1h por padrão — para sincronização contínua, peça pro seu gestor de tráfego gerar um <strong>refresh token</strong> via console do Google Cloud.</>,
+          },
+        ]}
+        oauthNote="Conexão automática 1-clique requer app OAuth aprovado pelo Google (em validação). Por ora, o método do OAuth Playground funciona e é seguro."
       />
 
       {!integration && (

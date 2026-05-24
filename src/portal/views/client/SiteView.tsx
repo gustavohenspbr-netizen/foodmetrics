@@ -43,12 +43,37 @@ export function SiteView() {
         provider="ga4"
         brandColor="#f9ab00"
         title="Google Analytics 4"
-        description="Cole o Property ID do GA4 (ex: properties/123456789) e um Service Account Key JSON com acesso de leitura."
+        description="Cole o Property ID do GA4 e o JSON da Service Account com acesso de leitura à propriedade."
         fields={[
           { key: "account_id", label: "Property ID", hint: "Formato properties/NNNNNNNNN", required: true },
           { key: "account_name", label: "Nome da propriedade" },
           { key: "access_token", label: "Service Account Key (JSON)", type: "password" },
         ]}
+        quickActions={[
+          { url: "https://analytics.google.com", label: "Abrir Google Analytics", description: "Pegar o Property ID em Admin" },
+          { url: "https://console.cloud.google.com/iam-admin/serviceaccounts", label: "Google Cloud Console", description: "Criar Service Account" },
+        ]}
+        tutorial={[
+          {
+            title: "Pegar o Property ID",
+            description: <>Entre no <strong>Google Analytics</strong> → no menu inferior esquerdo, clique em <strong>Admin (engrenagem)</strong> → coluna <strong>Propriedade</strong> → <strong>"Detalhes da propriedade"</strong>. O <strong>Property ID</strong> é um número de 9-10 dígitos. Formate como <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">properties/123456789</code>.</>,
+            link: { url: "https://analytics.google.com", label: "Google Analytics" },
+          },
+          {
+            title: "Criar Service Account no Google Cloud",
+            description: <>Acesse o <strong>Google Cloud Console</strong> → <strong>IAM & Admin</strong> → <strong>Service Accounts</strong> → <strong>"Create Service Account"</strong>. Dê um nome (ex: "foodmetrics-ga4"). Clique <strong>"Done"</strong>.</>,
+            link: { url: "https://console.cloud.google.com/iam-admin/serviceaccounts", label: "Service Accounts" },
+          },
+          {
+            title: "Gerar a Key (JSON)",
+            description: <>Na lista, clique nos 3 pontinhos da service account criada → <strong>"Manage keys"</strong> → <strong>"Add key" → "Create new key" → JSON</strong>. Um arquivo .json baixa automaticamente — abra com bloco de notas e <strong>cole o conteúdo inteiro</strong> no campo abaixo.</>,
+          },
+          {
+            title: "Dar acesso à propriedade GA4",
+            description: <>Volte ao <strong>Google Analytics → Admin → Property Access Management → "+" → Add users</strong>. Cole o email da service account (formato <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">xxx@projeto.iam.gserviceaccount.com</code>) com permissão <strong>"Viewer"</strong>.</>,
+          },
+        ]}
+        oauthNote="Service Account é o método oficial e recomendado pelo Google pra integrações server-to-server. OAuth pessoal não funciona pra sync automático."
       />
 
       {!integration && (

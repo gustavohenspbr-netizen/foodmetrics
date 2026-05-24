@@ -41,12 +41,36 @@ export function IfoodView() {
         provider="ifood"
         brandColor="#ea1d2c"
         title="iFood Partner"
-        description="Cole o Merchant ID e Client Secret do seu cadastro no Portal Parceiro iFood. Os pedidos, avaliações e cardápio serão sincronizados periodicamente."
+        description="Cole o Merchant ID e Client Secret gerados no Portal do Parceiro iFood."
         fields={[
           { key: "account_id", label: "Merchant ID", required: true },
           { key: "account_name", label: "Nome da loja" },
           { key: "access_token", label: "Client Secret", type: "password", required: true },
         ]}
+        quickActions={[
+          { url: "https://portal.ifood.com.br", label: "Portal do Parceiro iFood", description: "Login com sua conta de operador" },
+          { url: "https://developer.ifood.com.br/pt-BR/docs/getting-started", label: "Documentação iFood Developer" },
+        ]}
+        tutorial={[
+          {
+            title: "Solicitar acesso de API ao iFood",
+            description: <>O iFood libera API só pra parceiros aprovados. Entre no <strong>Portal do Parceiro</strong> → <strong>Configurações</strong> → <strong>Integrações</strong> → <strong>"Solicitar acesso à API"</strong>. Aprovação leva de 1 a 5 dias úteis.</>,
+            link: { url: "https://portal.ifood.com.br", label: "Portal do Parceiro" },
+          },
+          {
+            title: "Pegar Merchant ID",
+            description: <>Após aprovado, na seção de Integrações você vê o <strong>Merchant ID</strong> da sua loja (UUID longo). Cada loja tem 1 ID. Copie o da loja que quer sincronizar.</>,
+          },
+          {
+            title: "Gerar Client Secret",
+            description: <>Na mesma tela, clique em <strong>"Gerar credenciais"</strong>. O sistema mostra um <strong>Client ID</strong> + <strong>Client Secret</strong> — o Secret só é mostrado uma vez. Copie e guarde em local seguro.</>,
+          },
+          {
+            title: "Colar aqui",
+            description: <>Cole o Merchant ID e o Client Secret. O sync diário trará pedidos, avaliações, cardápio e cancelamentos automaticamente.</>,
+          },
+        ]}
+        oauthNote="iFood não tem OAuth público — credenciais sempre são geradas manualmente no Portal do Parceiro."
       />
 
       {!integration && (
