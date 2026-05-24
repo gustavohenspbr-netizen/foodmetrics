@@ -211,93 +211,84 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ============================================================
-    // 8. MANIFESTO — parallax suave do burger (sem pin)
+    // 8. MANIFESTO — Dash mockup parallax + texto reveal + counters
     // ============================================================
     const manifestoSection = document.querySelector('.manifesto');
-    const manifestoBurger = document.querySelector('.manifesto__burger-wrap');
+    const dashMockup = document.querySelector('.dash-mockup');
     const manifestoTextWrap = document.querySelector('.manifesto__text-wrap');
-    const manifestoNotifs = document.querySelectorAll('.ifood-notif');
 
-    if (manifestoSection && manifestoBurger && manifestoTextWrap) {
-      mm.add('(min-width: 901px)', () => {
-        // Burger entra com scale + fade conforme rola
-        gsap.set(manifestoBurger, { opacity: 0, scale: 0.7, rotation: -15 });
-        gsap.set(manifestoNotifs, { opacity: 0, y: 30, scale: 0.8 });
-
-        // Burger reveal (acontece quando entra na viewport)
-        gsap.to(manifestoBurger, {
-          opacity: 1,
-          scale: 1,
-          rotation: 0,
-          ease: 'power3.out',
-          duration: 1.4,
-          scrollTrigger: {
-            trigger: manifestoSection,
-            start: 'top 70%',
-            toggleActions: 'play none none reverse',
-          },
-        });
-
-        // Parallax suave do burger conforme rola pela seção
-        gsap.to(manifestoBurger, {
-          yPercent: -15,
-          rotation: 8,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: manifestoSection,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: 1,
-          },
-        });
-
-        // Texto desliza por baixo
-        gsap.to(manifestoTextWrap, {
-          opacity: 1,
-          y: 0,
-          ease: 'power3.out',
-          duration: 1.2,
-          scrollTrigger: {
-            trigger: manifestoSection,
-            start: 'top 55%',
-            toggleActions: 'play none none reverse',
-          },
-        });
-
-        // Notifs aparecem em sequência depois do burger
-        gsap.to(manifestoNotifs, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          stagger: 0.18,
-          ease: 'back.out(1.6)',
-          duration: 0.7,
-          scrollTrigger: {
-            trigger: manifestoSection,
-            start: 'top 50%',
-            toggleActions: 'play none none reverse',
-          },
-        });
-
-        // Float idle no burger (sutil)
-        gsap.to(manifestoBurger, {
-          y: '+=15',
-          duration: 4,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          delay: 1.5,
-        });
+    if (manifestoSection && manifestoTextWrap) {
+      // Texto desliza
+      gsap.to(manifestoTextWrap, {
+        opacity: 1,
+        x: 0,
+        ease: 'power3.out',
+        duration: 1.1,
+        scrollTrigger: {
+          trigger: manifestoSection,
+          start: 'top 60%',
+          toggleActions: 'play none none reverse',
+        },
       });
 
-      mm.add('(max-width: 900px)', () => {
-        gsap.set(manifestoBurger, { opacity: 1, scale: 1, rotation: 0 });
-        gsap.set(manifestoTextWrap, { opacity: 1, y: 0 });
-        gsap.to(manifestoNotifs, {
-          opacity: 1, y: 0, scale: 1, stagger: 0.15, ease: 'back.out(1.5)',
-          scrollTrigger: { trigger: manifestoBurger, start: 'top 60%' },
+      if (dashMockup) {
+        // Mockup entra com fade + scale
+        gsap.fromTo(dashMockup,
+          { opacity: 0, y: 40, scale: 0.95 },
+          {
+            opacity: 1, y: 0, scale: 1,
+            ease: 'power3.out',
+            duration: 1.2,
+            scrollTrigger: {
+              trigger: manifestoSection,
+              start: 'top 70%',
+              toggleActions: 'play none none reverse',
+            },
+          }
+        );
+
+        // Parallax sutil no mockup conforme rola pela seção (apenas desktop)
+        mm.add('(min-width: 901px)', () => {
+          gsap.to(dashMockup, {
+            yPercent: -8,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: manifestoSection,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 1.2,
+            },
+          });
         });
-      });
+
+        // Animação dos counters dentro do mockup
+        const counters = dashMockup.querySelectorAll('[data-counter]');
+        counters.forEach((el) => {
+          const target = parseFloat(el.dataset.target);
+          const prefix = el.dataset.prefix || '';
+          const suffix = el.dataset.suffix || '';
+          const decimals = parseInt(el.dataset.decimals || '0');
+
+          ScrollTrigger.create({
+            trigger: manifestoSection,
+            start: 'top 60%',
+            once: true,
+            onEnter: () => {
+              const obj = { v: 0 };
+              gsap.to(obj, {
+                v: target,
+                duration: 2.2,
+                ease: 'power2.out',
+                delay: 0.5,
+                onUpdate: () => {
+                  const val = obj.v.toFixed(decimals);
+                  el.textContent = `${prefix}${val}${suffix}`;
+                },
+              });
+            },
+          });
+        });
+      }
     }
 
     // ============================================================

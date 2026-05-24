@@ -105,32 +105,139 @@
   <!-- MANIFESTO SECTION -->
   <section class="section manifesto" id="manifesto">
     <div class="manifesto__content">
-      <div class="manifesto__burger-wrap">
-        <!-- O vídeo do Burger Girando -->
-        <video class="manifesto__burger" src="/images/pode_gerar_o_vídeo_do_burger_c.mp4" autoplay loop muted playsinline></video>
-      </div>
-        
-      <!-- iFood Notifications -->
-      <div class="manifesto__notifs-wrap">
-        <div class="ifood-notif ifood-notif--1">
-          <div class="ifood-notif__icon">🛵</div>
-          <div class="ifood-notif__text">
-            <strong>Novo Pedido!</strong>
+      <!-- MOCKUP DO PAINEL FOODMETRICS -->
+      <div class="dash-mockup">
+        <!-- Browser chrome -->
+        <div class="dash-mockup__chrome">
+          <div class="dash-mockup__dots">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="dash-mockup__url">app.foodmetricas.com.br/dashboard</div>
+        </div>
+
+        <div class="dash-mockup__body">
+          <!-- Mini sidebar -->
+          <aside class="dash-mockup__side">
+            <div class="dash-mockup__logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+            </div>
+            <div class="dash-mockup__nav">
+              <div class="dash-mockup__nav-item dash-mockup__nav-item--active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              </div>
+              <div class="dash-mockup__nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+              <div class="dash-mockup__nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+              <div class="dash-mockup__nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+              <div class="dash-mockup__nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+            </div>
+          </aside>
+
+          <!-- Main content -->
+          <main class="dash-mockup__main">
+            <div class="dash-mockup__header">
+              <div>
+                <p class="dash-mockup__title">Visão Geral</p>
+                <p class="dash-mockup__sub">Burger King · Maio 2026</p>
+              </div>
+              <div class="dash-mockup__live-dot">
+                <span></span> AO VIVO
+              </div>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="dash-mockup__cards">
+              <div class="dash-card">
+                <div class="dash-card__head">
+                  <span class="dash-card__label">Faturamento</span>
+                  <div class="dash-card__icon dash-card__icon--green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                </div>
+                <p class="dash-card__value" data-counter data-target="245" data-prefix="R$ " data-suffix="K">R$ 0K</p>
+                <div class="dash-card__delta dash-card__delta--up">▲ 18.4%</div>
+              </div>
+              <div class="dash-card">
+                <div class="dash-card__head">
+                  <span class="dash-card__label">ROAS</span>
+                  <div class="dash-card__icon dash-card__icon--orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  </div>
+                </div>
+                <p class="dash-card__value" data-counter data-target="7.5" data-suffix="x" data-decimals="1">0x</p>
+                <div class="dash-card__delta dash-card__delta--up">▲ 5.1%</div>
+              </div>
+              <div class="dash-card">
+                <div class="dash-card__head">
+                  <span class="dash-card__label">Pedidos</span>
+                  <div class="dash-card__icon dash-card__icon--red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  </div>
+                </div>
+                <p class="dash-card__value" data-counter data-target="4120">0</p>
+                <div class="dash-card__delta dash-card__delta--up">▲ 12.3%</div>
+              </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="dash-chart">
+              <div class="dash-chart__head">
+                <div>
+                  <p class="dash-chart__title">Investimento vs Faturamento</p>
+                  <p class="dash-chart__sub">Últimos 30 dias</p>
+                </div>
+                <div class="dash-chart__legend">
+                  <span class="dash-chart__legend-item"><i style="background: #e01c1c"></i> Faturamento</span>
+                  <span class="dash-chart__legend-item"><i style="background: #ff8732"></i> Ads</span>
+                </div>
+              </div>
+              <svg class="dash-chart__svg" viewBox="0 0 400 130" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="gradRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#e01c1c" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#e01c1c" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="gradSpend" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ff8732" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#ff8732" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <!-- Grid lines -->
+                <line x1="0" y1="32" x2="400" y2="32" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3 3"/>
+                <line x1="0" y1="65" x2="400" y2="65" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3 3"/>
+                <line x1="0" y1="98" x2="400" y2="98" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3 3"/>
+                <!-- Faturamento path -->
+                <path class="dash-chart__area dash-chart__area--rev" d="M 0 95 C 30 88, 50 82, 70 75 S 110 60, 140 55 S 180 38, 210 30 S 250 22, 280 18 S 330 12, 400 8 L 400 130 L 0 130 Z" fill="url(#gradRev)"/>
+                <path class="dash-chart__line dash-chart__line--rev" d="M 0 95 C 30 88, 50 82, 70 75 S 110 60, 140 55 S 180 38, 210 30 S 250 22, 280 18 S 330 12, 400 8" stroke="#e01c1c" stroke-width="2.5" fill="none"/>
+                <!-- Ads path -->
+                <path class="dash-chart__area dash-chart__area--spend" d="M 0 110 C 30 108, 50 105, 70 102 S 110 92, 140 88 S 180 80, 210 76 S 250 68, 280 64 S 330 56, 400 52 L 400 130 L 0 130 Z" fill="url(#gradSpend)"/>
+                <path class="dash-chart__line dash-chart__line--spend" d="M 0 110 C 30 108, 50 105, 70 102 S 110 92, 140 88 S 180 80, 210 76 S 250 68, 280 64 S 330 56, 400 52" stroke="#ff8732" stroke-width="2" fill="none"/>
+                <!-- Pulse dot at end -->
+                <circle class="dash-chart__pulse" cx="395" cy="8" r="4" fill="#e01c1c"/>
+              </svg>
+            </div>
+          </main>
+        </div>
+
+        <!-- Floating notifications (saem da direita) -->
+        <div class="dash-notif dash-notif--1">
+          <div class="dash-notif__icon">🛵</div>
+          <div>
+            <strong>Novo Pedido iFood</strong>
             <span>R$ 89,90</span>
           </div>
         </div>
-        <div class="ifood-notif ifood-notif--2">
-          <div class="ifood-notif__icon">🛵</div>
-          <div class="ifood-notif__text">
-            <strong>Novo Pedido!</strong>
-            <span>R$ 145,50</span>
+        <div class="dash-notif dash-notif--2">
+          <div class="dash-notif__icon dash-notif__icon--green">↗</div>
+          <div>
+            <strong>Campanha superou meta</strong>
+            <span>CTR 6.2%</span>
           </div>
         </div>
-        <div class="ifood-notif ifood-notif--3">
-          <div class="ifood-notif__icon">🛵</div>
-          <div class="ifood-notif__text">
-            <strong>Novo Pedido!</strong>
-            <span>R$ 62,00</span>
+        <div class="dash-notif dash-notif--3">
+          <div class="dash-notif__icon">⭐</div>
+          <div>
+            <strong>Nova avaliação 5★</strong>
+            <span>"Comida divina!"</span>
           </div>
         </div>
       </div>
