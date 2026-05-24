@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import {
   MapPin, Mail, Calendar, CreditCard, FileSignature, Link2,
-  Edit, Trash2, Pause, Play, Briefcase, Users, Target, MessageSquare,
-  CheckCircle2, AlertCircle, ExternalLink, Activity,
+  Edit, Trash2, Pause, Play, MessageSquare, Phone, Camera, Globe,
+  CheckCircle2, ExternalLink, Activity, MessageCircle, Building2, Copy,
 } from "lucide-react";
 import { Drawer } from "./ui/Drawer";
 import { Badge } from "./ui/Badge";
@@ -17,6 +17,7 @@ import { useToast } from "./ui/Toast";
 import { ClientFormModal } from "./ClientFormModal";
 import { useClientDetail, updateClient, deleteClient } from "../lib/api";
 import { fmt } from "../lib/format";
+import { buildWhatsAppUrl, formatPhoneDisplay, waTemplates } from "../lib/whatsapp";
 
 interface Props {
   clientId: string | null;
@@ -75,13 +76,22 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
     }
   }
 
+  function copyToClipboard(text: string, label: string) {
+    navigator.clipboard.writeText(text);
+    toast.success("Copiado!", label);
+  }
+
   const open = !!clientId;
   const tabs = [
     { id: "overview", label: "Visão Geral" },
+    { id: "contact", label: "Contato" },
     { id: "finance", label: "Financeiro", count: data?.invoices?.length },
     { id: "marketing", label: "Marketing", count: data?.integrations?.length },
     { id: "ops", label: "Operação", count: (data?.tasks?.length ?? 0) + (data?.events?.length ?? 0) },
   ];
+
+  // URL do WhatsApp principal (com saudação)
+  const waMainUrl = data ? buildWhatsAppUrl(data.whatsapp, waTemplates.greeting(data.contact_name)) : null;
 
   return (
     <>
@@ -125,7 +135,17 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
               </div>
 
               {/* Actions */}
-              <div className="relative flex items-center gap-2 mt-5 pt-5 border-t border-white/10">
+              <div className="relative flex items-center gap-2 mt-5 pt-5 border-t border-white/10 flex-wrap">
+                {waMainUrl && (
+                  <a
+                    href={waMainUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-[#25D366] hover:bg-[#1ebb59] text-white font-bold text-[13px] shadow-[0_4px_14px_rgba(37,211,102,0.4)] transition-colors"
+                  >
+                    <MessageCircle size={14} /> WhatsApp
+                  </a>
+                )}
                 <Button size="sm" variant="primary" icon={Edit} onClick={() => setEditOpen(true)}>Editar</Button>
                 <Button size="sm" variant="outline" icon={data.status === "paused" ? Play : Pause} onClick={togglePause} className="bg-white/5 border-white/20 text-white hover:bg-white/10">
                   {data.status === "paused" ? "Reativar" : "Pausar"}
@@ -181,6 +201,29 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
             {/* Tab content */}
             {tab === "overview" && (
               <div className="space-y-4">
+                {/* Quick contact summary */}
+                {(data.contact_name || data.whatsapp || data.email) && (
+                  <Card>
+                    <CardHeader title="Contato rápido" action={<Button size="xs" variant="ghost" onClick={() => setTab("contact")}>Ver tudo →</Button>} />
+                    <div className="space-y-2">
+                      {data.contact_name && <Row label="Responsável" value={data.contact_name} />}
+                      {data.whatsapp && (
+                        <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/40 last:border-b-0">
+                          <span className="text-[12px] text-slate-500 dark:text-slate-400 font-semibold">WhatsApp</span>
+                          <a
+                            href={buildWhatsAppUrl(data.whatsapp, waTemplates.greeting(data.contact_name)) ?? "#"}
+                            target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-[13px] font-bold text-[#25D366] hover:underline"
+                          >
+                            <MessageCircle size={13} /> {formatPhoneDisplay(data.whatsapp)}
+                          </a>
+                        </div>
+                      )}
+                      {data.email && <Row label="Email" value={data.email} />}
+                    </div>
+                  </Card>
+                )}
+
                 {data.contract ? (
                   <Card>
                     <CardHeader title="Contrato vigente" action={<FileSignature size={16} className="text-slate-400" />} />
@@ -195,6 +238,183 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
                 ) : (
                   <EmptyState icon={FileSignature} title="Sem contrato cadastrado" description="Adicione um contrato em Contratos pra registrar escopo e valor." />
                 )}
+
+                {data.notes && (
+                  <Card>
+                    <CardHeader title="Notas internas" />
+                    <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{data.notes}</p>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {tab === "contact" && (
+              <div className="space-y-4">
+                {/* Card de Responsável */}
+                <Card>
+                  <CardHeader title="Pessoa de contato" />
+                  {!data.contact_name && !data.email && !data.phone && !data.whatsapp ? (
+                    <EmptyState
+                      icon={Phone}
+                      title="Sem contato cadastrado"
+                      description="Adicione os dados de contato em Editar."
+                      action={<Button size="sm" variant="primary" icon={Edit} onClick={() => setEditOpen(true)}>Editar cliente</Button>}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {data.contact_name && (
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#0B1120]">
+                          <Avatar name={data.contact_name} color={data.color} size="md" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-bold text-slate-900 dark:text-white">{data.contact_name}</p>
+                            <p className="text-[11px] text-slate-500 font-semibold">Responsável</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {data.whatsapp && (
+                        <ContactRow
+                          icon={MessageCircle}
+                          iconColor="#25D366"
+                          label="WhatsApp"
+                          value={formatPhoneDisplay(data.whatsapp)}
+                          action={
+                            <a
+                              href={buildWhatsAppUrl(data.whatsapp, waTemplates.greeting(data.contact_name)) ?? "#"}
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#25D366] hover:bg-[#1ebb59] text-white text-[12px] font-bold transition-colors"
+                            >
+                              <MessageCircle size={12} /> Conversar
+                            </a>
+                          }
+                          onCopy={() => copyToClipboard(data.whatsapp, "WhatsApp")}
+                        />
+                      )}
+
+                      {data.phone && (
+                        <ContactRow
+                          icon={Phone}
+                          iconColor="#3b82f6"
+                          label="Telefone fixo"
+                          value={formatPhoneDisplay(data.phone)}
+                          action={
+                            <a
+                              href={`tel:${data.phone.replace(/\D/g, "")}`}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[12px] font-bold transition-colors"
+                            >
+                              <Phone size={12} /> Ligar
+                            </a>
+                          }
+                          onCopy={() => copyToClipboard(data.phone, "Telefone")}
+                        />
+                      )}
+
+                      {data.email && (
+                        <ContactRow
+                          icon={Mail}
+                          iconColor="#a855f7"
+                          label="Email"
+                          value={data.email}
+                          action={
+                            <a
+                              href={`mailto:${data.email}`}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[12px] font-bold transition-colors"
+                            >
+                              <Mail size={12} /> Enviar
+                            </a>
+                          }
+                          onCopy={() => copyToClipboard(data.email, "Email")}
+                        />
+                      )}
+
+                      {data.instagram && (
+                        <ContactRow
+                          icon={Camera}
+                          iconColor="#e4405f"
+                          label="Camera"
+                          value={`@${data.instagram}`}
+                          action={
+                            <a
+                              href={`https://instagram.com/${data.instagram}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[12px] font-bold transition-colors"
+                            >
+                              <ExternalLink size={12} /> Abrir
+                            </a>
+                          }
+                        />
+                      )}
+
+                      {data.website && (
+                        <ContactRow
+                          icon={Globe}
+                          iconColor="#10b981"
+                          label="Site"
+                          value={data.website}
+                          action={
+                            <a
+                              href={data.website.startsWith("http") ? data.website : `https://${data.website}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[12px] font-bold transition-colors"
+                            >
+                              <ExternalLink size={12} /> Abrir
+                            </a>
+                          }
+                        />
+                      )}
+                    </div>
+                  )}
+                </Card>
+
+                {/* Card de Empresa */}
+                {(data.cnpj || data.address) && (
+                  <Card>
+                    <CardHeader title="Dados da empresa" action={<Building2 size={16} className="text-slate-400" />} />
+                    <div className="space-y-2">
+                      {data.cnpj && (
+                        <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/40 last:border-b-0">
+                          <span className="text-[12px] text-slate-500 dark:text-slate-400 font-semibold">CNPJ</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono">{data.cnpj}</span>
+                            <button onClick={() => copyToClipboard(data.cnpj, "CNPJ")} className="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                              <Copy size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {(data.city || data.address) && (
+                        <Row
+                          label="Endereço"
+                          value={[data.address, data.city, data.state].filter(Boolean).join(", ") || "—"}
+                        />
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Templates de WhatsApp pra contato rápido */}
+                {data.whatsapp && (
+                  <Card>
+                    <CardHeader title="Mensagens rápidas" subtitle="Templates pré-prontos pro WhatsApp" />
+                    <div className="space-y-2">
+                      <WhatsAppTemplate
+                        label="Cumprimento"
+                        message={waTemplates.greeting(data.contact_name)}
+                        whatsapp={data.whatsapp}
+                      />
+                      <WhatsAppTemplate
+                        label="Follow-up"
+                        message={waTemplates.followUp(data.contact_name)}
+                        whatsapp={data.whatsapp}
+                      />
+                      <WhatsAppTemplate
+                        label="Relatório pronto"
+                        message={waTemplates.reportReady(data.contact_name, new Date().toLocaleDateString("pt-BR", { month: "long" }))}
+                        whatsapp={data.whatsapp}
+                      />
+                    </div>
+                  </Card>
+                )}
               </div>
             )}
 
@@ -208,16 +428,39 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
                     <div className="space-y-2">
                       {data.invoices.map((inv: any) => {
                         const tone: Record<string, "success" | "warning" | "danger"> = { paid: "success", pending: "warning", overdue: "danger" };
+                        const isUnpaid = inv.status === "pending" || inv.status === "overdue";
+                        const billingUrl = data.whatsapp && isUnpaid
+                          ? buildWhatsAppUrl(data.whatsapp, waTemplates.billing({
+                              contactName: data.contact_name,
+                              restaurantName: data.name,
+                              invoiceDescription: inv.description,
+                              amount: Number(inv.amount),
+                              dueDate: inv.due_date,
+                            }))
+                          : null;
                         return (
-                          <div key={inv.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{inv.description}</p>
-                              <p className="text-[11px] text-slate-500 font-semibold">Vence em {fmt.date(inv.due_date)}</p>
+                          <div key={inv.id} className="p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{inv.description}</p>
+                                <p className="text-[11px] text-slate-500 font-semibold">Vence em {fmt.date(inv.due_date)}</p>
+                              </div>
+                              <span className="text-[14px] font-extrabold text-slate-900 dark:text-white tabular-nums">{fmt.currency(Number(inv.amount))}</span>
+                              <Badge tone={tone[inv.status] ?? "neutral"} size="sm">
+                                {inv.status === "paid" ? "Pago" : inv.status === "pending" ? "Pendente" : "Atrasado"}
+                              </Badge>
                             </div>
-                            <span className="text-[14px] font-extrabold text-slate-900 dark:text-white tabular-nums">{fmt.currency(Number(inv.amount))}</span>
-                            <Badge tone={tone[inv.status] ?? "neutral"} size="sm">
-                              {inv.status === "paid" ? "Pago" : inv.status === "pending" ? "Pendente" : "Atrasado"}
-                            </Badge>
+                            {billingUrl && (
+                              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/40">
+                                <a
+                                  href={billingUrl}
+                                  target="_blank" rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#25D366] hover:underline"
+                                >
+                                  <MessageCircle size={12} /> Cobrar via WhatsApp
+                                </a>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -352,5 +595,50 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="text-[12px] text-slate-500 dark:text-slate-400 font-semibold">{label}</span>
       <span className="text-[13px] font-bold text-slate-900 dark:text-white">{value}</span>
     </div>
+  );
+}
+
+function ContactRow({
+  icon: Icon, iconColor, label, value, action, onCopy,
+}: {
+  icon: any; iconColor: string; label: string; value: string; action?: React.ReactNode; onCopy?: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
+      <div
+        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ background: `${iconColor}15`, color: iconColor, border: `1px solid ${iconColor}30` }}
+      >
+        <Icon size={16} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
+        <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate font-mono">{value}</p>
+      </div>
+      {onCopy && (
+        <button onClick={onCopy} className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-1.5">
+          <Copy size={13} />
+        </button>
+      )}
+      {action}
+    </div>
+  );
+}
+
+function WhatsAppTemplate({ label, message, whatsapp }: { label: string; message: string; whatsapp: string }) {
+  const url = buildWhatsAppUrl(whatsapp, message);
+  return (
+    <a
+      href={url ?? "#"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:border-[#25D366]/40 hover:bg-[#25D366]/[0.04] transition-colors group"
+    >
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-[#25D366]">{label}</span>
+        <MessageCircle size={13} className="text-slate-400 group-hover:text-[#25D366] flex-shrink-0" />
+      </div>
+      <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">{message}</p>
+    </a>
   );
 }

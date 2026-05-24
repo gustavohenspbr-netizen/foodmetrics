@@ -60,6 +60,13 @@ export type Client = {
   name: string;
   type: string | null;
   email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  contact_name: string | null;
+  cnpj: string | null;
+  address: string | null;
+  website: string | null;
+  instagram: string | null;
   city: string | null;
   state: string | null;
   avatar: string | null;
@@ -70,6 +77,7 @@ export type Client = {
   health_score: number;
   manager_id: string | null;
   joined_at: string;
+  notes: string | null;
 };
 
 export function useClients() {
@@ -145,6 +153,13 @@ export async function createClient(opts: Partial<Client> & { name: string }) {
     name: opts.name,
     type: opts.type ?? null,
     email: opts.email ?? null,
+    phone: opts.phone ?? null,
+    whatsapp: opts.whatsapp ?? null,
+    contact_name: opts.contact_name ?? null,
+    cnpj: opts.cnpj ?? null,
+    address: opts.address ?? null,
+    website: opts.website ?? null,
+    instagram: opts.instagram ?? null,
     city: opts.city ?? null,
     state: opts.state ?? null,
     avatar: opts.avatar ?? opts.name.slice(0, 2).toUpperCase(),
@@ -154,6 +169,7 @@ export async function createClient(opts: Partial<Client> & { name: string }) {
     mrr: opts.mrr ?? 0,
     health_score: opts.health_score ?? 50,
     manager_id: opts.manager_id ?? null,
+    notes: opts.notes ?? null,
   };
   return supabase.from("clients").insert(payload).select().single();
 }
