@@ -727,6 +727,66 @@ export function useNotifications() {
 }
 
 // ============================================================
+// INTEGRATIONS (Google Ads, Meta Ads, iFood, GMB, GA4)
+// ============================================================
+export type Integration = {
+  id: string;
+  client_id: string;
+  provider: string;
+  account_id: string | null;
+  account_name: string | null;
+  customer_id: string | null;
+  pixel_id: string | null;
+  access_token: string | null;
+  status: string;
+  last_sync_at: string | null;
+  notes: string | null;
+};
+
+export function useIntegration(clientId: string | undefined, provider: string) {
+  return useQuery<Integration | null>(
+    async () => {
+      if (!clientId) return { data: null, error: null };
+      const { data, error } = await supabase
+        .from("integrations")
+        .select("*")
+        .eq("client_id", clientId)
+        .eq("provider", provider)
+        .maybeSingle();
+      return { data: data as any, error };
+    },
+    [clientId, provider]
+  );
+}
+
+export async function saveIntegration(opts: {
+  clientId: string;
+  provider: string;
+  account_id?: string;
+  account_name?: string;
+  customer_id?: string;
+  pixel_id?: string;
+  access_token?: string;
+}) {
+  const payload = {
+    client_id: opts.clientId,
+    provider: opts.provider,
+    account_id: opts.account_id ?? null,
+    account_name: opts.account_name ?? null,
+    customer_id: opts.customer_id ?? null,
+    pixel_id: opts.pixel_id ?? null,
+    access_token: opts.access_token ?? null,
+    status: "connected",
+    connected_at: new Date().toISOString(),
+  };
+  return supabase.from("integrations").upsert(payload, { onConflict: "client_id,provider" });
+}
+
+export async function removeIntegration(clientId: string, provider: string) {
+  return supabase.from("integrations").delete().eq("client_id", clientId).eq("provider", provider);
+}
+
+// ============================================================
 // ADMIN OVERVIEW (agregados)
 // ============================================================
 export function useAdminOverview() {

@@ -1,25 +1,6 @@
 import React from "react";
-import {
-  Users,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  ArrowUpRight,
-  Sparkles,
-  Plus,
-} from "lucide-react";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  BarChart,
-  Bar,
-} from "recharts";
+import { Users, DollarSign, TrendingDown, Activity, ArrowUpRight, Sparkles, Plus } from "lucide-react";
+import { ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from "recharts";
 import { MetricCard } from "../../components/MetricCard";
 import { ChartCard } from "../../components/ChartCard";
 import { Card, CardHeader } from "../../components/ui/Card";
@@ -46,14 +27,7 @@ export function DashboardView() {
 
   const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
   const atRisk = (clients ?? []).filter((c: any) => c.health_score < 70);
-
-  const stateHistory = [
-    { month: "Jan", spend: 320000 },
-    { month: "Fev", spend: 345000 },
-    { month: "Mar", spend: 360000 },
-    { month: "Abr", spend: 380000 },
-    { month: "Mai", spend: overview?.totalManaged ?? 425000 },
-  ];
+  const hasClients = (clients?.length ?? 0) > 0;
 
   return (
     <div className="space-y-8">
@@ -67,23 +41,33 @@ export function DashboardView() {
               <Sparkles size={11} className="mr-0.5" />
               {today}
             </Badge>
-            <h2 className="text-white text-4xl font-extrabold tracking-tight mt-4 leading-tight">
-              MRR de{" "}
-              {lOverview ? (
-                <Skeleton className="inline-block w-32 h-10" />
-              ) : (
-                <span className="bg-gradient-to-r from-[#ff8732] to-[#ffba8c] bg-clip-text text-transparent">
-                  {fmt.currencyCompact(overview?.mrr ?? 0)}
-                </span>
-              )}{" "}
-              <span className="text-emerald-400 text-2xl ml-2">+{overview?.mrrGrowth ?? 0}%</span>
-            </h2>
-            <p className="text-slate-300 text-base font-medium mt-2 max-w-2xl">
-              <span className="text-white font-bold">{overview?.activeClients ?? 0} clientes ativos</span> · churn em{" "}
-              <span className="text-emerald-400 font-bold">{overview?.churnRate ?? 0}%</span> · você gerencia{" "}
-              <span className="text-white font-bold">{fmt.currencyCompact(overview?.totalManaged ?? 0)}</span> em
-              investimento mensal para seus clientes.
-            </p>
+            {hasClients ? (
+              <>
+                <h2 className="text-white text-4xl font-extrabold tracking-tight mt-4 leading-tight">
+                  MRR de{" "}
+                  {lOverview ? <Skeleton className="inline-block w-32 h-10" /> : (
+                    <span className="bg-gradient-to-r from-[#ff8732] to-[#ffba8c] bg-clip-text text-transparent">
+                      {fmt.currencyCompact(overview?.mrr ?? 0)}
+                    </span>
+                  )}
+                </h2>
+                <p className="text-slate-300 text-base font-medium mt-2 max-w-2xl">
+                  <span className="text-white font-bold">{overview?.activeClients ?? 0} clientes ativos</span> · você gerencia{" "}
+                  <span className="text-white font-bold">{fmt.currencyCompact(overview?.totalManaged ?? 0)}</span> em
+                  investimento mensal para seus clientes.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-white text-4xl font-extrabold tracking-tight mt-4 leading-tight">
+                  Bem-vindo ao painel{" "}
+                  <span className="bg-gradient-to-r from-[#ff8732] to-[#ffba8c] bg-clip-text text-transparent">FoodMetrics</span>
+                </h2>
+                <p className="text-slate-300 text-base font-medium mt-2 max-w-2xl">
+                  Comece adicionando seu primeiro cliente. Daqui você acompanha MRR, churn, equipe, financeiro e a operação de tráfego de todos os restaurantes.
+                </p>
+              </>
+            )}
           </div>
           <div className="flex flex-col gap-3">
             <Button variant="primary" icon={Plus}>
@@ -102,81 +86,14 @@ export function DashboardView() {
 
       {/* METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <MetricCard
-          label="MRR"
-          value={fmt.currencyCompact(overview?.mrr ?? 0)}
-          delta={overview?.mrrGrowth ?? 0}
-          icon={DollarSign}
-          color="#10b981"
-          spark={[128, 134, 139, 142, 148, 151, (overview?.mrr ?? 0) / 1000]}
-        />
-        <MetricCard
-          label="Clientes Ativos"
-          value={overview?.activeClients ?? 0}
-          delta={4.2}
-          icon={Users}
-          color="#e01c1c"
-          spark={[18, 19, 20, 21, 22, 23, overview?.activeClients ?? 24]}
-        />
-        <MetricCard
-          label="Verba Gerenciada"
-          value={fmt.currencyCompact(overview?.totalManaged ?? 0)}
-          delta={6.5}
-          icon={Activity}
-          color="#ff8732"
-          spark={[320, 345, 360, 380, 405, 418, (overview?.totalManaged ?? 0) / 1000]}
-        />
-        <MetricCard
-          label="Churn"
-          value={`${overview?.churnRate ?? 0}%`}
-          delta={-0.4}
-          deltaLabel="vs trimestre"
-          icon={TrendingDown}
-          color="#3b82f6"
-          spark={[3.2, 2.9, 2.7, 2.5, 2.3, 2.2, overview?.churnRate ?? 2.1]}
-        />
+        <MetricCard label="MRR" value={fmt.currencyCompact(overview?.mrr ?? 0)} icon={DollarSign} color="#10b981" hint="Receita mensal recorrente" />
+        <MetricCard label="Clientes Ativos" value={overview?.activeClients ?? 0} icon={Users} color="#e01c1c" hint={`${overview?.pendingClients ?? 0} pendentes`} />
+        <MetricCard label="Verba Gerenciada" value={fmt.currencyCompact(overview?.totalManaged ?? 0)} icon={Activity} color="#ff8732" hint="Soma Google + Meta (mês)" />
+        <MetricCard label="Em risco" value={String(atRisk.length)} icon={TrendingDown} color={atRisk.length > 0 ? "#ef4444" : "#10b981"} hint="Health < 70" />
       </div>
 
-      {/* CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <ChartCard
-          className="lg:col-span-2"
-          title="Verba gerenciada mensal"
-          subtitle="Soma do investimento de todos os clientes (Google + Meta)"
-          height={300}
-        >
-          <ResponsiveContainer>
-            <AreaChart data={stateHistory} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="admin-spend" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#e01c1c" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#e01c1c" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="currentColor"
-                className="text-slate-200 dark:text-slate-800"
-                vertical={false}
-              />
-              <XAxis dataKey="month" stroke="currentColor" className="text-slate-500 text-xs" tickLine={false} axisLine={false} />
-              <YAxis stroke="currentColor" className="text-slate-500 text-xs" tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "rgba(15,23,42,0.96)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 12,
-                  color: "white",
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
-                formatter={(v: number) => fmt.currency(v)}
-              />
-              <Area type="monotone" dataKey="spend" stroke="#e01c1c" strokeWidth={2.5} fill="url(#admin-spend)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
+      {/* CHART — só Clientes por Estado quando há dados reais */}
+      {hasClients && (
         <ChartCard title="Clientes por Estado" subtitle="Distribuição geográfica" height={300}>
           {lByState ? (
             <div className="space-y-3">
@@ -188,22 +105,13 @@ export function DashboardView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-slate-800" horizontal={false} />
                 <XAxis type="number" stroke="currentColor" className="text-slate-500 text-xs" tickLine={false} axisLine={false} />
                 <YAxis dataKey="state" type="category" stroke="currentColor" className="text-slate-500 text-xs font-bold" tickLine={false} axisLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15,23,42,0.96)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 12,
-                    color: "white",
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(15,23,42,0.96)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "white", fontSize: 12, fontWeight: 600 }} />
                 <Bar dataKey="count" fill="#ff8732" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
-      </div>
+      )}
 
       {/* HEALTH SCORE + EQUIPE + AGENDA */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
