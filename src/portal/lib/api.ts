@@ -583,6 +583,59 @@ export function useEvents() {
   );
 }
 
+/** Eventos de um mês específico — pro calendário */
+export function useEventsByMonth(monthDate: Date) {
+  const start = new Date(monthDate);
+  start.setDate(1);
+  start.setHours(0, 0, 0, 0);
+  // pega 1 mês antes e 1 depois pra cobrir os "dias de outros meses" no grid
+  const rangeStart = new Date(start);
+  rangeStart.setDate(rangeStart.getDate() - 7);
+  const rangeEnd = new Date(start);
+  rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+  rangeEnd.setDate(rangeEnd.getDate() + 14);
+
+  return useArrayQuery<any>(
+    async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*, client:clients(name)")
+        .gte("starts_at", rangeStart.toISOString())
+        .lte("starts_at", rangeEnd.toISOString())
+        .order("starts_at");
+      const mapped = (data ?? []).map((e: any) => ({
+        ...e, client_name: e.client?.name ?? null,
+      }));
+      return { data: mapped, error };
+    },
+    [start.getTime()]
+  );
+}
+
+export async function createEvent(opts: {
+  title: string;
+  description?: string;
+  type?: string;
+  client_id?: string | null;
+  starts_at: string;
+  ends_at: string;
+}) {
+  const { data: u } = await supabase.auth.getUser();
+  return supabase.from("events").insert({
+    title: opts.title,
+    description: opts.description ?? null,
+    type: opts.type ?? "internal",
+    client_id: opts.client_id ?? null,
+    starts_at: opts.starts_at,
+    ends_at: opts.ends_at,
+    created_by: u.user?.id ?? null,
+  });
+}
+
+export async function deleteEvent(id: string) {
+  return supabase.from("events").delete().eq("id", id);
+}
+
 // ============================================================
 // MATERIALS
 // ============================================================
@@ -947,37 +1000,94 @@ export async function removeIntegration(clientId: string, provider: string) {
 // ============================================================
 // ADMIN OVERVIEW (agregados)
 // ============================================================
-export function useAdminOverview() {
+
+/** monthOffset: 0 = este mês, -1 = mês passado, -3 = 3 meses atrás, etc */
+export function useAdminOverview(monthOffset: number = 0) {
   return useQuery<any>(
     async () => {
-      const [{ data: clients }, { data: invoices }, { data: metrics }] = await Promise.all([
-        supabase.from("clients").select("status, mrr"),
-        supabase.from("invoices").select("amount, status"),
-        supabase.from("metrics_daily").select("spend, date"),
+      // Calcula janela: mês atual baseado em monthOffset
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + monthOffset + 1, 1);
+      const prevStart = new Date(now.getFullYear(), now.getMonth() + monthOffset - 1, 1);
+
+      const [{ data: clients }, { data: metrics }, { data: prevMetrics }, { data: invoicesPeriod }] = await Promise.all([
+        supabase.from("clients").select("status, mrr, created_at"),
+        supabase.from("metrics_daily").select("spend, date")
+          .gte("date", periodStart.toISOString().slice(0, 10))
+          .lt("date", periodEnd.toISOString().slice(0, 10)),
+        supabase.from("metrics_daily").select("spend, date")
+          .gte("date", prevStart.toISOString().slice(0, 10))
+          .lt("date", periodStart.toISOString().slice(0, 10)),
+        supabase.from("invoices").select("amount, status, paid_at")
+          .gte("due_date", periodStart.toISOString().slice(0, 10))
+          .lt("due_date", periodEnd.toISOString().slice(0, 10)),
       ]);
+
       const allClients = clients ?? [];
       const activeClients = allClients.filter((c: any) => c.status === "active");
       const mrr = activeClients.reduce((s, c: any) => s + Number(c.mrr ?? 0), 0);
 
-      // Verba gerenciada do mês corrente
-      const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-      const totalManaged = (metrics ?? [])
-        .filter((m: any) => new Date(m.date) >= monthStart)
-        .reduce((s, m: any) => s + Number(m.spend ?? 0), 0);
+      const totalManaged = (metrics ?? []).reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
+      const prevManaged = (prevMetrics ?? []).reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
+      const managedGrowth = prevManaged > 0 ? ((totalManaged - prevManaged) / prevManaged) * 100 : 0;
+
+      // Faturamento do período (faturas pagas)
+      const periodRevenue = (invoicesPeriod ?? [])
+        .filter((i: any) => i.status === "paid")
+        .reduce((s: number, i: any) => s + Number(i.amount ?? 0), 0);
+
+      // Novos clientes no período
+      const newClientsInPeriod = allClients.filter((c: any) => {
+        if (!c.created_at) return false;
+        const d = new Date(c.created_at);
+        return d >= periodStart && d < periodEnd;
+      }).length;
 
       return {
         data: {
           mrr,
-          mrrGrowth: 12.4, // mockado por ora — calculável com histórico
+          mrrGrowth: 0, // (requer histórico mensal de MRR pra calcular real)
           activeClients: activeClients.length,
           pendingClients: allClients.filter((c: any) => c.status === "pending").length,
-          churnRate: 2.1,
+          newClientsInPeriod,
           totalManaged,
+          managedGrowth,
+          periodRevenue,
+          periodLabel: periodStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }),
         },
         error: null,
       };
     },
-    []
+    [monthOffset]
+  );
+}
+
+/** Histórico mensal — pra gráfico de evolução de N meses */
+export function useMonthlyHistory(months: number = 6) {
+  return useArrayQuery<{ month: string; spend: number; clients: number; revenue: number }>(
+    async () => {
+      const result: any[] = [];
+      const now = new Date();
+      for (let i = months - 1; i >= 0; i--) {
+        const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        const [{ data: m }, { data: inv }, { data: cs }] = await Promise.all([
+          supabase.from("metrics_daily").select("spend").gte("date", start.toISOString().slice(0, 10)).lt("date", end.toISOString().slice(0, 10)),
+          supabase.from("invoices").select("amount, status, paid_at").gte("due_date", start.toISOString().slice(0, 10)).lt("due_date", end.toISOString().slice(0, 10)),
+          supabase.from("clients").select("created_at").lt("created_at", end.toISOString()),
+        ]);
+        const spend = (m ?? []).reduce((s: number, r: any) => s + Number(r.spend ?? 0), 0);
+        const revenue = (inv ?? []).filter((i: any) => i.status === "paid").reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+        result.push({
+          month: start.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+          spend, revenue,
+          clients: (cs ?? []).length,
+        });
+      }
+      return { data: result, error: null };
+    },
+    [months]
   );
 }
 
