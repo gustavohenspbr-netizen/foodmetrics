@@ -191,53 +191,68 @@
   <section class="section dores" id="dores">
     <div class="container">
       <div class="section__header reveal">
-        <h2 class="section__title dores__title">Você tem um restaurante ou delivery e se identifica com pelo menos uma dessas <span class="highlight">dores?</span></h2>
+        <span class="badge">Você se identifica?</span>
+        <h2 class="section__title dores__title">As <span class="highlight">5 dores</span> que sufocam restaurantes hoje</h2>
+        <p class="section__sub">Se pelo menos uma dessas situações é familiar, você está perdendo dinheiro todo mês — e nem percebeu.</p>
       </div>
-      <div class="dores__grid grid-bento">
+
+      <div class="dores__grid">
         <!-- Dor 1 -->
-        <div class="glass-card dore-card col-4 reveal">
-          <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (1).svg" alt="Dor 1" class="dores-card__icon" />
+        <article class="dore-card reveal">
+          <span class="dore-card__num">01</span>
+          <div class="dore-card__icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M9 21V12h6v9"/><circle cx="12" cy="16" r="0.8" fill="currentColor"/></svg>
           </div>
-          <h3>Dificuldade para atrair novos clientes.</h3>
-          <p>Seu restaurante tem qualidade, mas as mesas continuam vazias. Você investe em produtos e atendimento de primeira, mas os clientes simplesmente não aparecem. O problema não é seu negócio — é que as pessoas ainda não sabem que você existe.</p>
-        </div>
-        <!-- Dor 2 -->
-        <div class="glass-card dore-card dore-card--featured col-8 reveal">
-          <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (2).svg" alt="Dor 2" class="dores-card__icon" />
+          <h3 class="dore-card__title">Mesas vazias mesmo com comida de qualidade</h3>
+          <p class="dore-card__text">Você investe em produto e atendimento, mas os clientes simplesmente não aparecem. O problema não é seu negócio — é que ainda não sabem que você existe.</p>
+        </article>
+
+        <!-- Dor 2 (FEATURED) -->
+        <article class="dore-card dore-card--featured reveal">
+          <span class="dore-card__badge">Mais comum</span>
+          <span class="dore-card__num">02</span>
+          <div class="dore-card__icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
           </div>
-          <h3>Custo alto com marketing que não traz resultados.</h3>
-          <p>Você já gastou com panfletos, impulsionamentos e até agências que prometeram resultados milagrosos. No fim, pouco ou nenhum retorno. O caixa sangra e você não sabe se o problema é o marketing ou seu negócio. A verdade: marketing sem estratégia é só despesa disfarçada.</p>
-        </div>
+          <h3 class="dore-card__title">Dinheiro queimado em marketing sem retorno</h3>
+          <p class="dore-card__text">Panfletos, impulsionamentos, agências que prometeram milagres. O caixa sangra e você não sabe se o problema é o marketing ou seu negócio. Marketing sem estratégia é só despesa disfarçada.</p>
+        </article>
+
         <!-- Dor 3 -->
-        <div class="glass-card dore-card col-4 reveal">
-          <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (3).svg" alt="Dor 3" class="dores-card__icon" />
+        <article class="dore-card reveal">
+          <span class="dore-card__num">03</span>
+          <div class="dore-card__icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
           </div>
-          <h3>Baixa visibilidade no mundo digital.</h3>
-          <p>Quando alguém busca "restaurante perto de mim", aparecem todos os concorrentes — menos você. Suas redes têm poucos seguidores, suas postagens não geram engajamento. Enquanto isso, lugares com menos qualidade dominam o digital e faturam mais.</p>
-        </div>
+          <h3 class="dore-card__title">Invisível no Google e nas redes sociais</h3>
+          <p class="dore-card__text">Quando buscam "restaurante perto de mim", aparece todo mundo menos você. Suas redes têm engajamento zero. Lugares com menos qualidade dominam o digital e faturam mais.</p>
+        </article>
+
         <!-- Dor 4 -->
-        <div class="glass-card dore-card col-4 reveal">
-          <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (4).svg" alt="Dor 4" class="dores-card__icon" />
+        <article class="dore-card reveal">
+          <span class="dore-card__num">04</span>
+          <div class="dore-card__icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           </div>
-          <h3>Dependência excessiva de plataformas como iFood, com taxas abusivas.</h3>
-          <p>Você trabalha de sol a sol, os pedidos chegam, mas no fim do mês o lucro desaparece nas taxas de 20%, 30% ou mais. Você virou refém: sem os apps não tem movimento, com eles mal sobra margem. E o pior: os clientes são do app, não seus.</p>
-        </div>
+          <h3 class="dore-card__title">Refém do iFood e das taxas abusivas</h3>
+          <p class="dore-card__text">Os pedidos chegam, mas no fim do mês o lucro vai pras taxas de 20%, 30% ou mais. Sem os apps não tem movimento. Com eles, mal sobra margem — e os clientes são do app, não seus.</p>
+        </article>
+
         <!-- Dor 5 -->
-        <div class="glass-card dore-card col-4 reveal">
-          <div class="icon-anim icon-anim--red" tabindex="0">
-            <img src="/images/download (5).svg" alt="Dor 5" class="dores-card__icon" />
+        <article class="dore-card reveal">
+          <span class="dore-card__num">05</span>
+          <div class="dore-card__icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <h3>Falta de tempo para gerenciar redes sociais e campanhas.</h3>
-          <p>Você sabe que precisa postar, mas quando? Entre gestão, equipe e qualidade do serviço, sobra zero tempo. Suas redes ficam abandonadas enquanto concorrentes crescem no digital.</p>
-        </div>
+          <h3 class="dore-card__title">Sem tempo pra cuidar do marketing</h3>
+          <p class="dore-card__text">Você sabe que precisa postar, fazer anúncios, responder reviews. Mas entre gestão e cozinha, sobra zero tempo. Suas redes ficam abandonadas enquanto concorrentes crescem.</p>
+        </article>
       </div>
+
       <div class="dores__cta">
+        <p class="dores__cta-line">Se você marcou <strong>1 ou mais</strong>, está perdendo faturamento agora mesmo.</p>
         <a href="https://form.spotform.com.br/cm1xs183w00u7j60p37x4n4z0" target="_blank" class="btn btn--primary btn--xl pulse">
-          QUERO AUMENTAR MEU FATURAMENTO!
+          QUERO RESOLVER ISSO AGORA
         </a>
       </div>
     </div>

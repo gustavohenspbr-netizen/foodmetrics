@@ -355,54 +355,250 @@ a { text-decoration: none; color: inherit; }
 .section { padding: 100px 0; }
 .section:nth-child(even) { background: var(--bg2); }
 
-/* ===== DORES ===== */
-.dores__title, .pilares__title { font-size: clamp(3rem, 6vw, 6rem); margin-bottom: 16px; text-transform: uppercase; letter-spacing: -0.01em; }
-.dores__cta, .pilares__cta { text-align: center; margin-top: 48px; }
+/* ===== DORES (refeito) ===== */
+.dores__title, .pilares__title {
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  margin-bottom: 18px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.dores__title {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.dores .section__sub {
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.05rem;
+}
 
-.dores__title { max-width: 680px; margin-left: auto; margin-right: auto; text-align: center; }
-.dores__grid { margin-bottom: 0; }
-/* Dores Bento Box Redesign */
-.dore-card { 
-  padding: 40px; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; 
-  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.5s ease, border-color 0.5s ease;
-  position: relative; overflow: hidden; border-radius: 24px;
-  background: linear-gradient(145deg, rgba(20, 18, 20, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 20px 40px rgba(0, 0, 0, 0.5);
+/* Grid 3 colunas + 2 últimas centralizadas */
+.dores__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 64px;
+  margin-bottom: 0;
 }
+.dores__grid > .dore-card:nth-child(4) {
+  grid-column: 1 / span 1;
+  margin-left: calc(50% / 3 + 12px);
+}
+.dores__grid > .dore-card:nth-child(5) {
+  grid-column: 2 / span 1;
+  margin-left: calc(50% / 3 + 12px);
+}
+
+@media (max-width: 992px) {
+  .dores__grid { grid-template-columns: repeat(2, 1fr); }
+  .dores__grid > .dore-card:nth-child(4),
+  .dores__grid > .dore-card:nth-child(5) {
+    grid-column: auto;
+    margin-left: 0;
+  }
+}
+@media (max-width: 600px) {
+  .dores__grid { grid-template-columns: 1fr; }
+}
+
+/* Card */
+.dore-card {
+  position: relative;
+  padding: 36px 32px 32px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.005) 100%),
+    rgba(14, 14, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
+    border-color 0.4s ease,
+    box-shadow 0.4s ease,
+    background 0.4s ease;
+}
+
+/* Glow laranja sutil no topo do card (decorativo) */
 .dore-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, #ea1d2c, transparent);
-  opacity: 0.3; transition: opacity 0.4s;
+  content: '';
+  position: absolute;
+  top: -1px; left: 30%; right: 30%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 138, 91, 0.5), transparent);
+  z-index: 1;
+  transition: opacity 0.4s ease;
+  opacity: 0.5;
 }
+
+/* Glow radial no canto inferior — aparece no hover */
 .dore-card::after {
-  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle at 50% 0%, rgba(234, 29, 44, 0.1) 0%, transparent 50%);
-  pointer-events: none; z-index: 0; transition: opacity 0.4s;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 100%, rgba(255, 90, 31, 0.12), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+  pointer-events: none;
 }
+
 .dore-card > * { position: relative; z-index: 2; }
-.dore-card:hover { 
-  transform: translateY(-8px) scale(1.02); 
-  border-color: rgba(234, 29, 44, 0.3);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 30px 60px rgba(234, 29, 44, 0.15);
+
+.dore-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 90, 31, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 90, 31, 0.08);
 }
 .dore-card:hover::before { opacity: 1; }
-.dore-card:hover::after { opacity: 0.8; }
+.dore-card:hover::after { opacity: 1; }
 
+/* Número grande de fundo */
+.dore-card__num {
+  position: absolute;
+  top: 18px; right: 24px;
+  font-family: var(--font-h);
+  font-size: 4.5rem;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.04);
+  letter-spacing: -0.03em;
+  z-index: 1 !important;
+  pointer-events: none;
+  transition: color 0.4s ease;
+}
+.dore-card:hover .dore-card__num {
+  color: rgba(255, 90, 31, 0.18);
+}
+
+/* Ícone */
+.dore-card__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 90, 31, 0.15), rgba(255, 90, 31, 0.05));
+  border: 1px solid rgba(255, 90, 31, 0.25);
+  color: #ff8a5b;
+  margin-bottom: 24px;
+  transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+}
+.dore-card__icon-wrap svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+}
+.dore-card:hover .dore-card__icon-wrap {
+  transform: scale(1.08) rotate(-4deg);
+  background: linear-gradient(135deg, rgba(255, 90, 31, 0.25), rgba(255, 90, 31, 0.1));
+  border-color: rgba(255, 90, 31, 0.5);
+}
+
+/* Título */
+.dore-card__title {
+  font-family: var(--font-h);
+  font-size: 1.55rem;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 14px;
+  -webkit-text-fill-color: currentColor;
+  background: none;
+}
+
+/* Texto */
+.dore-card__text {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.96rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Featured card */
 .dore-card--featured {
-  background: linear-gradient(145deg, rgba(30, 15, 15, 0.9) 0%, rgba(15, 10, 10, 0.95) 100%);
-  border-color: rgba(234, 29, 44, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 90, 31, 0.08) 0%, rgba(255, 90, 31, 0.02) 100%),
+    rgba(14, 14, 18, 0.7);
+  border-color: rgba(255, 90, 31, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 40px rgba(255, 90, 31, 0.08),
+    0 12px 30px rgba(0, 0, 0, 0.45);
 }
-.dore-card--featured::after {
-  background: radial-gradient(circle at 50% 0%, rgba(234, 29, 44, 0.2) 0%, transparent 60%);
+.dore-card--featured::before { opacity: 1; background: linear-gradient(90deg, transparent, rgba(255, 138, 91, 0.8), transparent); }
+.dore-card--featured .dore-card__num { color: rgba(255, 90, 31, 0.18); }
+.dore-card--featured .dore-card__icon-wrap {
+  background: linear-gradient(135deg, rgba(255, 90, 31, 0.25), rgba(255, 90, 31, 0.08));
+  border-color: rgba(255, 90, 31, 0.45);
 }
 
-.dore-card__icon { margin-bottom: 24px; position: relative; z-index: 2; }
-.dore-card h3 { 
-  font-family: var(--font-h); font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; 
-  letter-spacing: -0.02em; line-height: 1.2;
+/* Badge "Mais comum" */
+.dore-card__badge {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #ff5a1f, #ff8a5b);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  z-index: 3;
+  box-shadow: 0 6px 16px rgba(255, 90, 31, 0.4);
 }
-.dore-card p { color: rgba(255,255,255,0.7); font-size: 1.05rem; line-height: 1.7; margin-bottom: 0; }
+.dore-card__badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* CTA */
+.dores__cta, .pilares__cta {
+  text-align: center;
+  margin-top: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.dores__cta-line {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+.dores__cta-line strong {
+  color: #ff8a5b;
+  font-weight: 800;
+}
 
 /* Estrategias Wide Cards (Stacked) */
 .estrategia-wide {
@@ -1268,18 +1464,6 @@ html.lenis, html.lenis body { height: auto; }
 }
 .section__title .highlight {
   -webkit-text-fill-color: transparent;
-}
-
-/* Dores card hover — destaque vermelho sutil */
-.dore-card {
-  transition: all 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
-}
-.dore-card:hover {
-  border-color: rgba(255, 90, 31, 0.4) !important;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 90, 31, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Estratégia card polish */
