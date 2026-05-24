@@ -6,6 +6,14 @@ import { NotificationBell } from "./NotificationBell";
 import { Dropdown, DropdownItem, DropdownSection } from "./ui/Dropdown";
 import { MOCK_ADMIN_USER, MOCK_CLIENT_USER } from "../lib/mockData";
 import { LogOut, Settings, User } from "lucide-react";
+import { signOut } from "../lib/auth";
+import { fmt } from "../lib/format";
+
+interface CurrentUser {
+  name: string;
+  email: string;
+  role: string;
+}
 
 interface TopbarProps {
   type: "admin" | "client";
@@ -13,9 +21,10 @@ interface TopbarProps {
   pendingCount?: number;
   clientName?: string;
   onOpenCommand?: () => void;
+  currentUser?: CurrentUser;
 }
 
-export function Topbar({ type, active, pendingCount = 0, onOpenCommand }: TopbarProps) {
+export function Topbar({ type, active, pendingCount = 0, onOpenCommand, currentUser }: TopbarProps) {
   const { theme, setTheme } = useTheme();
 
   const allNav = type === "admin" ? ADMIN_NAV : CLIENT_NAV;
@@ -27,9 +36,16 @@ export function Topbar({ type, active, pendingCount = 0, onOpenCommand }: Topbar
       ? "Painel Administrativo — Food Métricas"
       : `Visão detalhada de performance · Maio 2025`;
 
-  const user = type === "admin" ? MOCK_ADMIN_USER : { name: MOCK_CLIENT_USER.ownerName, role: "Cliente", avatar: MOCK_CLIENT_USER.avatar, email: "carlos@bksp.com.br" };
+  const fallback = type === "admin"
+    ? MOCK_ADMIN_USER
+    : { name: MOCK_CLIENT_USER.ownerName, role: "Cliente", avatar: MOCK_CLIENT_USER.avatar, email: "carlos@bksp.com.br" };
 
-  function logout() {
+  const user = currentUser
+    ? { ...currentUser, avatar: fmt.initials(currentUser.name) }
+    : fallback;
+
+  async function logout() {
+    await signOut();
     sessionStorage.clear();
     window.location.href = "/login.html";
   }

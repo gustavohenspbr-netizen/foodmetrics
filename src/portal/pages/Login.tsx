@@ -1,112 +1,199 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Mail, Lock, ArrowRight, Sparkles, Send, CheckCircle2 } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { useToast } from "../components/ui/Toast";
+import { sendMagicLink, signInWithPassword, useSession, redirectByRole } from "../lib/auth";
+import { supabase } from "../lib/supabase";
 
-const MOCK_USERS = [
-  { email: "admin@foodmetricas.com.br", password: "admin123", role: "admin" },
-  { email: "cliente@burgerkings.com.br", password: "cliente123", role: "client" },
-];
+type Mode = "password" | "magic";
 
 export function LoginPage() {
+  const toast = useToast();
+  const { user, loading: sessionLoading } = useSession();
+  const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
+  // Se já está logado, redireciona pela role do profile
+  useEffect(() => {
+    if (sessionLoading) return;
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => redirectByRole((data as any)?.role));
+  }, [user, sessionLoading]);
+
+  async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
+    const { data, error } = await signInWithPassword(email, password);
+    setLoading(false);
 
-    const user = MOCK_USERS.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (!user) {
-      setError("E-mail ou senha incorretos.");
-      setLoading(false);
+    if (error) {
+      toast.error("Não foi possível entrar", error.message);
       return;
     }
-
-    sessionStorage.setItem("fm_role", user.role);
-    sessionStorage.setItem("fm_email", user.email);
-
-    if (user.role === "admin") {
-      window.location.href = "/admin.html";
-    } else {
-      window.location.href = "/dashboard.html";
+    if (!data.user) {
+      toast.error("Erro inesperado", "Tente novamente em alguns segundos.");
+      return;
     }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+    redirectByRole((profile as any)?.role);
+  }
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await sendMagicLink(email);
+    setLoading(false);
+    if (error) {
+      toast.error("Não foi possível enviar", error.message);
+      return;
+    }
+    setMagicSent(true);
+    toast.success("Link enviado!", "Confira sua caixa de entrada.");
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120] p-6 transition-colors duration-300 font-sans">
-      <div className="w-full max-w-md animate-fadeIn">
-        <div className="text-center mb-10">
-          <img src="/images/imgi_56_Ativo-1.svg" alt="Food Métricas" className="h-10 mx-auto mb-8 drop-shadow-sm" />
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">Bem-vindo de volta</h1>
-          <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400">
-            Acesse seu painel exclusivo
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120] p-6 font-sans relative overflow-hidden">
+      {/* BG ORBS */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-[#e01c1c]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#ff8732]/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md relative">
+        <div className="text-center mb-8">
+          <img
+            src="/images/imgi_56_Ativo-1.svg"
+            alt="Food Métricas"
+            className="h-10 mx-auto mb-6 drop-shadow-sm"
+          />
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+            Bem-vindo de volta
+          </h1>
+          <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400">
+            Acesse o portal Food Métricas
           </p>
         </div>
 
-        <form onSubmit={handleLogin}
-          className="bg-white dark:bg-[#0F172A] rounded-3xl p-10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-slate-200/60 dark:border-slate-800/60 space-y-7">
-
-          <div className="space-y-2.5">
-            <label className="block text-[13px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
-              E-mail corporativo
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com.br"
-              required
-              className="w-full rounded-xl px-5 py-3.5 bg-[#F8FAFC] dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800 text-[15px] font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#e01c1c]/20 focus:border-[#e01c1c] transition-all placeholder:text-slate-400"
-            />
-          </div>
-
-          <div className="space-y-2.5">
-            <label className="block text-[13px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+        <div className="bg-white dark:bg-[#0F172A] rounded-3xl p-8 shadow-[0_20px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-slate-200/60 dark:border-slate-800/60">
+          {/* MODE TOGGLE */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl mb-6">
+            <button
+              onClick={() => {
+                setMode("password");
+                setMagicSent(false);
+              }}
+              className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                mode === "password"
+                  ? "bg-white dark:bg-[#0F172A] text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-500"
+              }`}
+            >
               Senha
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full rounded-xl px-5 py-3.5 bg-[#F8FAFC] dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800 text-[15px] font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#e01c1c]/20 focus:border-[#e01c1c] transition-all placeholder:text-slate-400"
-            />
+            </button>
+            <button
+              onClick={() => {
+                setMode("magic");
+                setMagicSent(false);
+              }}
+              className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all flex items-center justify-center gap-1.5 ${
+                mode === "magic"
+                  ? "bg-white dark:bg-[#0F172A] text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-500"
+              }`}
+            >
+              <Sparkles size={12} />
+              Magic Link
+            </button>
           </div>
 
-          {error && (
-            <div className="rounded-xl px-5 py-4 text-[14px] text-center bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 font-bold">
-              {error}
+          {magicSent ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border border-emerald-500/30 flex items-center justify-center mb-5">
+                <CheckCircle2 size={28} className="text-emerald-600" />
+              </div>
+              <h3 className="text-[16px] font-bold text-slate-900 dark:text-white mb-2">
+                Email enviado!
+              </h3>
+              <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Mandamos um link mágico pra <span className="font-bold text-slate-900 dark:text-white">{email}</span>.
+                <br />
+                Clique no link pra entrar.
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setMagicSent(false);
+                  setMode("password");
+                }}
+                className="mt-6"
+              >
+                Voltar
+              </Button>
             </div>
+          ) : (
+            <form onSubmit={mode === "password" ? handlePasswordLogin : handleMagicLink} className="space-y-5">
+              <Input
+                label="E-mail"
+                type="email"
+                icon={Mail}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com.br"
+                required
+                autoComplete="email"
+              />
+
+              {mode === "password" && (
+                <Input
+                  label="Senha"
+                  type="password"
+                  icon={Lock}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                />
+              )}
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={loading}
+                fullWidth
+                iconRight={mode === "magic" ? Send : ArrowRight}
+              >
+                {mode === "password" ? "Acessar Painel" : "Enviar Link Mágico"}
+              </Button>
+
+              {mode === "password" && (
+                <button
+                  type="button"
+                  onClick={() => setMode("magic")}
+                  className="block w-full text-center text-[12px] font-bold text-slate-500 hover:text-[#e01c1c] transition-colors"
+                >
+                  Esqueceu a senha? Entre com link mágico
+                </button>
+              )}
+            </form>
           )}
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-xl font-bold text-[15px] text-white transition-all hover:opacity-90 disabled:opacity-50 shadow-[0_4px_14px_rgba(224,28,28,0.3)] mt-2"
-            style={{ backgroundColor: "#e01c1c" }}>
-            {loading ? "Entrando..." : "Acessar Painel"}
-          </button>
-
-          <div className="rounded-xl px-5 py-4 mt-8 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 font-medium text-[13px]">
-            <p className="flex justify-between items-center">
-              <span><span className="font-bold text-slate-700 dark:text-slate-300">Admin:</span> admin@...</span>
-              <span className="font-mono text-[11px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">admin123</span>
-            </p>
-            <p className="flex justify-between items-center">
-              <span><span className="font-bold text-slate-700 dark:text-slate-300">Cliente:</span> cliente@...</span>
-              <span className="font-mono text-[11px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">cliente123</span>
-            </p>
-          </div>
-        </form>
-
-        <p className="text-center mt-10 text-[13px] font-medium text-slate-400 dark:text-slate-500">
-          © 2025 Food Métricas. Todos os direitos reservados.
+        <p className="text-center mt-8 text-[12px] font-medium text-slate-400 dark:text-slate-500">
+          © 2026 Food Métricas. Todos os direitos reservados.
         </p>
       </div>
     </div>
