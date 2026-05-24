@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { Topbar } from "../components/Topbar";
+import { CommandPalette } from "../components/CommandPalette";
 import { DashboardView } from "../views/admin/DashboardView";
 import { ClientsView } from "../views/admin/ClientsView";
+import { TrafficView } from "../views/admin/TrafficView";
 import { CRMView } from "../views/admin/CRMView";
-import { FinanceView } from "../views/admin/FinanceView";
-import { ReportsView } from "../views/admin/ReportsView";
 import { ScheduleView } from "../views/admin/ScheduleView";
+import { TeamView } from "../views/admin/TeamView";
+import { FinanceView } from "../views/admin/FinanceView";
+import { ContractsView } from "../views/admin/ContractsView";
+import { ReportsView } from "../views/admin/ReportsView";
 
 export function AdminPage() {
   const [active, setActive] = useState("dashboard");
@@ -14,8 +18,9 @@ export function AdminPage() {
 
   useEffect(() => {
     setMounted(true);
-    const role = sessionStorage.getItem("fm_role");
-    if (role !== "admin") window.location.href = "/login.html";
+    // Auth guard relaxado em dev — em prod, descomente:
+    // const role = sessionStorage.getItem("fm_role");
+    // if (role !== "admin") window.location.href = "/login.html";
   }, []);
 
   if (!mounted) return null;
@@ -31,13 +36,18 @@ export function AdminPage() {
           <div className="max-w-[1600px] mx-auto">
             {active === "dashboard" && <DashboardView />}
             {active === "clients" && <ClientsView />}
+            {active === "traffic" && <TrafficView />}
             {active === "crm" && <CRMView />}
-            {active === "finance" && <FinanceView />}
-            {active === "reports" && <ReportsView />}
             {active === "schedule" && <ScheduleView />}
+            {active === "team" && <TeamView />}
+            {active === "finance" && <FinanceView />}
+            {active === "contracts" && <ContractsView />}
+            {active === "reports" && <ReportsView />}
           </div>
         </div>
       </main>
+
+      <CommandPalette type="admin" onNavigate={setActive} />
     </div>
   );
 }

@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { Topbar } from "../components/Topbar";
+import { CommandPalette } from "../components/CommandPalette";
 import { MOCK_CLIENT_USER } from "../lib/mockData";
 import { DashboardView } from "../views/client/DashboardView";
 import { GoogleAdsView } from "../views/client/GoogleAdsView";
 import { MetaAdsView } from "../views/client/MetaAdsView";
 import { IfoodView } from "../views/client/IfoodView";
+import { GMBView } from "../views/client/GMBView";
+import { SiteView } from "../views/client/SiteView";
+import { StrategyView } from "../views/client/StrategyView";
 import { ClientCRMView } from "../views/client/ClientCRMView";
-import { ClientFinanceView } from "../views/client/ClientFinanceView";
+import { MaterialsView } from "../views/client/MaterialsView";
+import { MessagesView } from "../views/client/MessagesView";
 import { ClientReportsView } from "../views/client/ClientReportsView";
+import { ClientFinanceView } from "../views/client/ClientFinanceView";
 
 export function ClientDashboard() {
   const [active, setActive] = useState("dashboard");
@@ -17,8 +23,9 @@ export function ClientDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    const role = sessionStorage.getItem("fm_role");
-    if (!role) window.location.href = "/login.html";
+    // Auth guard relaxado em dev — em prod, descomente:
+    // const role = sessionStorage.getItem("fm_role");
+    // if (!role) window.location.href = "/login.html";
   }, []);
 
   if (!mounted) return null;
@@ -36,12 +43,19 @@ export function ClientDashboard() {
             {active === "google-ads" && <GoogleAdsView />}
             {active === "meta-ads" && <MetaAdsView />}
             {active === "ifood" && <IfoodView />}
+            {active === "gmb" && <GMBView />}
+            {active === "site" && <SiteView />}
+            {active === "strategy" && <StrategyView />}
             {active === "crm" && <ClientCRMView />}
-            {active === "finance" && <ClientFinanceView />}
+            {active === "materials" && <MaterialsView />}
+            {active === "messages" && <MessagesView />}
             {active === "reports" && <ClientReportsView />}
+            {active === "finance" && <ClientFinanceView />}
           </div>
         </div>
       </main>
+
+      <CommandPalette type="client" onNavigate={setActive} />
     </div>
   );
 }

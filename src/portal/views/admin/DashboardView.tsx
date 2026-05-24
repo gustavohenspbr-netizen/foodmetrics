@@ -1,135 +1,355 @@
 import React from "react";
-import { UserCheck, Clock, DollarSign, TrendingUp, AlertCircle, FileText, Star } from "lucide-react";
-import { MOCK_CLIENTS, MOCK_REPORTS } from "../../lib/mockData";
+import {
+  Users,
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  ArrowUpRight,
+  Sparkles,
+  Plus,
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from "recharts";
 import { MetricCard } from "../../components/MetricCard";
+import { ChartCard } from "../../components/ChartCard";
+import { Card, CardHeader } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
+import { Avatar } from "../../components/ui/Avatar";
+import { ProgressBar } from "../../components/ui/ProgressBar";
+import { fmt } from "../../lib/format";
+import {
+  MOCK_ADMIN_OVERVIEW,
+  MOCK_CLIENTS,
+  MOCK_MONTHLY_SPEND,
+  MOCK_CLIENTS_BY_STATE,
+  MOCK_TEAM,
+  MOCK_SCHEDULE_EVENTS,
+} from "../../lib/mockData";
 
 export function DashboardView() {
-  const activeClients = MOCK_CLIENTS.filter(c => c.status === "active");
-  const pendingClients = MOCK_CLIENTS.filter(c => c.status === "pending");
-  const totalSpend = activeClients.reduce((s, c) => s + c.googleSpend + c.metaSpend, 0);
+  const o = MOCK_ADMIN_OVERVIEW;
+  const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  const atRisk = MOCK_CLIENTS.filter((c) => c.health < 70);
+
+  const stateHistory = MOCK_MONTHLY_SPEND.map((m) => ({
+    month: m.month,
+    spend: m.google + m.meta,
+  }));
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard label="Clientes Ativos" value={activeClients.length} icon={UserCheck} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-500/10" />
-        <MetricCard label="Aprovação Pendente" value={pendingClients.length} icon={Clock} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-500/10" />
-        <MetricCard label="Investimento Mensal" value={`R$ ${totalSpend.toLocaleString("pt-BR")}`} icon={DollarSign} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-500/10" />
-        <MetricCard label="Relatórios Enviados" value={MOCK_REPORTS.length} icon={TrendingUp} color="text-[#e01c1c] dark:text-red-400" bg="bg-red-50 dark:bg-red-500/10" />
+    <div className="space-y-8">
+      {/* HERO */}
+      <Card className="relative overflow-hidden p-8 bg-gradient-to-br from-[#0F172A] via-[#0F172A] to-[#1a2238] dark:from-[#0F172A] dark:to-[#0a0f1c] border-slate-800/50">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#e01c1c]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-32 w-48 h-48 bg-[#ff8732]/10 rounded-full blur-3xl" />
+        <div className="relative flex items-start justify-between flex-wrap gap-6">
+          <div className="flex-1 min-w-[280px]">
+            <Badge tone="orange" size="md" dot>
+              <Sparkles size={11} className="mr-0.5" />
+              {today}
+            </Badge>
+            <h2 className="text-white text-4xl font-extrabold tracking-tight mt-4 leading-tight">
+              MRR de{" "}
+              <span className="bg-gradient-to-r from-[#ff8732] to-[#ffba8c] bg-clip-text text-transparent">
+                {fmt.currencyCompact(o.mrr * 1000)}
+              </span>{" "}
+              <span className="text-emerald-400 text-2xl ml-2">+{o.mrrGrowth}%</span>
+            </h2>
+            <p className="text-slate-300 text-base font-medium mt-2 max-w-2xl">
+              <span className="text-white font-bold">{o.activeClients} clientes ativos</span> · churn em{" "}
+              <span className="text-emerald-400 font-bold">{o.churnRate}%</span> · você gerencia{" "}
+              <span className="text-white font-bold">{fmt.currencyCompact(o.totalManaged * 1000)}</span> em
+              investimento mensal para seus clientes.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button variant="primary" icon={Plus}>
+              Adicionar cliente
+            </Button>
+            <Button
+              variant="outline"
+              iconRight={ArrowUpRight}
+              className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+            >
+              Ver pipeline
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* METRIC CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <MetricCard
+          label="MRR"
+          value={fmt.currencyCompact(o.mrr * 1000)}
+          delta={o.mrrGrowth}
+          icon={DollarSign}
+          color="#10b981"
+          spark={o.mrrHistory}
+        />
+        <MetricCard
+          label="Clientes Ativos"
+          value={o.activeClients}
+          delta={4.2}
+          icon={Users}
+          color="#e01c1c"
+          spark={o.clientsHistory}
+        />
+        <MetricCard
+          label="Verba Gerenciada"
+          value={fmt.currencyCompact(o.totalManaged * 1000)}
+          delta={6.5}
+          icon={Activity}
+          color="#ff8732"
+          spark={o.spendHistory}
+        />
+        <MetricCard
+          label="Churn"
+          value={`${o.churnRate}%`}
+          delta={-0.4}
+          deltaLabel="vs trimestre"
+          icon={TrendingDown}
+          color="#3b82f6"
+          spark={[3.2, 2.9, 2.7, 2.5, 2.3, 2.2, 2.1]}
+        />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800/50">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Carteira de Clientes (Resumo)</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-[#F8FAFC] dark:bg-[#0B1120]/50 border-b border-slate-100 dark:border-slate-800/50">
-                    {["Cliente", "Tipo", "Google Ads", "Meta Ads", "iFood", "Status"].map(h => (
-                      <th key={h} className="px-8 py-4 text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
-                  {activeClients.map(c => (
-                    <tr key={c.id} className="hover:bg-[#F8FAFC] dark:hover:bg-[#0B1120]/30 transition-colors cursor-pointer group">
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm"
-                            style={{ background: c.color + "15", color: c.color, border: `1px solid ${c.color}30` }}>
-                            {c.avatar}
-                          </div>
-                          <div>
-                            <p className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{c.restaurant}</p>
-                            <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{c.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 text-[14px] text-slate-600 dark:text-slate-300 font-medium">{c.type}</td>
-                      <td className="px-8 py-5 text-[15px] font-bold text-slate-900 dark:text-white">R$ {c.googleSpend.toLocaleString("pt-BR")}</td>
-                      <td className="px-8 py-5 text-[15px] font-bold text-slate-900 dark:text-white">R$ {c.metaSpend.toLocaleString("pt-BR")}</td>
-                      <td className="px-8 py-5 text-[14px] font-bold text-slate-900 dark:text-white flex items-center gap-1.5 pt-7">
-                        <Star size={16} className="text-amber-500 fill-amber-500" /> {c.ifoodRating}
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                          Ativo
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      {/* CHARTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <ChartCard
+          className="lg:col-span-2"
+          title="Verba gerenciada mensal"
+          subtitle="Soma do investimento de todos os clientes (Google + Meta)"
+          height={300}
+        >
+          <ResponsiveContainer>
+            <AreaChart data={stateHistory} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="admin-spend" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#e01c1c" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#e01c1c" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="currentColor"
+                className="text-slate-200 dark:text-slate-800"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="month"
+                stroke="currentColor"
+                className="text-slate-500 text-xs"
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="currentColor"
+                className="text-slate-500 text-xs"
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(15,23,42,0.96)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12,
+                  color: "white",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+                formatter={(v: number) => fmt.currency(v)}
+              />
+              <Area
+                type="monotone"
+                dataKey="spend"
+                stroke="#e01c1c"
+                strokeWidth={2.5}
+                fill="url(#admin-spend)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        <div className="space-y-8">
-          {pendingClients.length > 0 && (
-            <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-amber-200 dark:border-amber-900/50 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
-              <div className="bg-amber-50/50 dark:bg-amber-500/10 px-8 py-5 border-b border-amber-100 dark:border-amber-900/30 flex items-center gap-3">
-                <AlertCircle size={20} className="text-amber-600 dark:text-amber-500" />
-                <h2 className="text-lg font-bold text-amber-900 dark:text-amber-200">Aprovações Pendentes</h2>
-              </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {pendingClients.map(c => (
-                  <div key={c.id} className="p-8 hover:bg-[#F8FAFC] dark:hover:bg-[#0B1120]/30 transition-colors">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm"
-                        style={{ background: c.color + "15", color: c.color, border: `1px solid ${c.color}30` }}>
-                        {c.avatar}
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 dark:text-white text-[15px]">{c.restaurant}</p>
-                        <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{c.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button className="flex-1 py-2.5 rounded-xl text-[13px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-sm shadow-emerald-600/20">
-                        Aprovar
-                      </button>
-                      <button className="flex-1 py-2.5 rounded-xl text-[13px] font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
-                        Recusar
-                      </button>
+        <ChartCard
+          title="Clientes por Estado"
+          subtitle="Distribuição geográfica"
+          height={300}
+        >
+          <ResponsiveContainer>
+            <BarChart data={MOCK_CLIENTS_BY_STATE} layout="vertical" margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="currentColor"
+                className="text-slate-200 dark:text-slate-800"
+                horizontal={false}
+              />
+              <XAxis
+                type="number"
+                stroke="currentColor"
+                className="text-slate-500 text-xs"
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                dataKey="state"
+                type="category"
+                stroke="currentColor"
+                className="text-slate-500 text-xs font-bold"
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(15,23,42,0.96)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12,
+                  color: "white",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              />
+              <Bar dataKey="count" fill="#ff8732" radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
+      {/* HEALTH SCORE + EQUIPE + AGENDA */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-1">
+          <CardHeader
+            title="Clientes em risco"
+            subtitle="Health Score abaixo de 70"
+            action={
+              <Badge tone="danger" dot>
+                {atRisk.length}
+              </Badge>
+            }
+          />
+          <div className="space-y-3.5">
+            {atRisk.map((c) => (
+              <div key={c.id} className="flex items-start gap-3">
+                <Avatar name={c.restaurant} color={c.color} size="md" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">
+                    {c.restaurant}
+                  </p>
+                  <div className="mt-1.5">
+                    <ProgressBar
+                      value={c.health}
+                      tone={c.health < 50 ? "danger" : c.health < 70 ? "warning" : "success"}
+                      size="sm"
+                    />
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+                        Health {c.health}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+                        {c.manager}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800/50">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Relatórios Recentes</h2>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
-              {MOCK_REPORTS.slice(0,4).map(r => (
-                <div key={r.id} className="px-8 py-5 hover:bg-[#F8FAFC] dark:hover:bg-[#0B1120]/30 transition-colors flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                      <FileText size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[14px] font-bold text-slate-900 dark:text-white line-clamp-1">{r.title}</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-1">{r.period}</p>
-                    </div>
-                  </div>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                    r.status === "read" 
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" 
-                      : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20"
-                  }`}>
-                    {r.status === "read" ? "Lido" : "Enviado"}
-                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+            {atRisk.length === 0 && (
+              <p className="text-[13px] text-slate-500 dark:text-slate-400 text-center py-6 font-medium">
+                Todos os clientes saudáveis 🎉
+              </p>
+            )}
           </div>
-        </div>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Equipe"
+            subtitle={`${MOCK_TEAM.filter((t) => t.online).length} online agora`}
+            action={
+              <Button variant="ghost" size="sm" iconRight={ArrowUpRight}>
+                Ver tudo
+              </Button>
+            }
+          />
+          <div className="space-y-3">
+            {MOCK_TEAM.slice(0, 5).map((m) => (
+              <div key={m.id} className="flex items-center gap-3">
+                <Avatar name={m.name} color={m.color} size="md" status={m.online ? "online" : "offline"} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{m.name}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{m.role}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-[12px] font-bold text-slate-900 dark:text-white">
+                    {m.clients} clientes
+                  </p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                    {m.tasksOpen} tarefas
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Próximos eventos"
+            subtitle="Hoje e amanhã"
+            action={
+              <Button variant="ghost" size="sm" iconRight={ArrowUpRight}>
+                Agenda
+              </Button>
+            }
+          />
+          <div className="space-y-3">
+            {MOCK_SCHEDULE_EVENTS.slice(0, 4).map((e) => {
+              const tones: Record<string, "brand" | "info" | "success" | "warning" | "neutral"> = {
+                onboarding: "brand",
+                report: "info",
+                strategy: "success",
+                internal: "neutral",
+                review: "warning",
+              };
+              return (
+                <div
+                  key={e.id}
+                  className="flex items-start gap-3 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                >
+                  <div className="text-center flex-shrink-0">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      {e.date.split("/")[0]}/{e.date.split("/")[1]}
+                    </p>
+                    <p className="text-[14px] text-slate-900 dark:text-white font-bold leading-none mt-1">
+                      {e.time.split(" - ")[0]}
+                    </p>
+                  </div>
+                  <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-bold text-slate-900 dark:text-white leading-tight">
+                      {e.title}
+                    </p>
+                    <Badge tone={tones[e.type] ?? "neutral"} size="sm" className="mt-1.5">
+                      {e.client}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
       </div>
     </div>
   );
