@@ -581,15 +581,25 @@ export function useLeads() {
     async () => {
       const { data, error } = await supabase
         .from("leads")
-        .select("*, owner:profiles!leads_owner_id_fkey(full_name)")
+        .select("*, owner:profiles!leads_owner_id_fkey(full_name, avatar_url)")
         .order("created_at", { ascending: false });
       const mapped = (data ?? []).map((l: any) => ({
-        ...l, owner_name: l.owner?.full_name ?? null,
+        ...l, 
+        owner_name: l.owner?.full_name ?? null,
+        owner_avatar: l.owner?.avatar_url ?? null,
       }));
       return { data: mapped, error };
     },
     []
   );
+}
+
+export async function createLead(payload: any) {
+  return supabase.from("leads").insert(payload).select().single();
+}
+
+export async function updateLead(id: string, payload: any) {
+  return supabase.from("leads").update(payload).eq("id", id).select().single();
 }
 
 export async function updateLeadStatus(id: string, status: string) {
