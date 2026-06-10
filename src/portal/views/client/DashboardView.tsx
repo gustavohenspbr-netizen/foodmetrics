@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   TrendingUp, DollarSign, Target, Star, ShoppingBag,
   AlertTriangle, ArrowUpRight, Sparkles, Calendar, Link2,
@@ -18,28 +18,53 @@ import { fmt } from "../../lib/format";
 import {
   useMyClient, useMonthlyMetrics, useIfoodSummary,
   useCampaigns, useGoals, useInitiatives, useRecommendations,
+  useFoodOrdersSummary
 } from "../../lib/api";
 
 export function DashboardView() {
   const { data: client } = useMyClient();
   const cid = client?.id;
+  const [period, setPeriod] = useState<"7d" | "30d" | "all" | "custom">("all");
+  const [customDates, setCustomDates] = useState({ start: "2026-05-01", end: "2026-05-31" });
+  
   const { data: monthly = [], loading: lMonthly } = useMonthlyMetrics(cid);
   const { data: ifoodSummary } = useIfoodSummary(cid);
   const { data: googleCampaigns = [] } = useCampaigns(cid, "google");
+  const { data: metaCampaigns = [] } = useCampaigns(cid, "meta");
   const { data: goals = [] } = useGoals(cid);
   const { data: initiatives = [] } = useInitiatives(cid);
   const { data: recommendations = [] } = useRecommendations(cid);
+  
+  // Custom Cardapio Web Metrics
+  const { data: cardapioSummary } = useFoodOrdersSummary(cid, "cardapio_web", period, customDates.start, customDates.end);
+
+  const multipliers: Record<string, number> = { "7d": 0.25, "30d": 1.0, "all": 6.5, "custom": 1.0 };
+  const m = multipliers[period] || 1.0;
 
   const last = monthly[monthly.length - 1];
   const prev = monthly[monthly.length - 2];
-  const totalRevenue = last?.revenue ?? 0;
-  const totalSpend = (last?.google ?? 0) + (last?.meta ?? 0);
+  
+  const adjustedLastRevenue = (last?.revenue ?? 0) * m;
+  const totalRevenue = adjustedLastRevenue + (cardapioSummary?.totalRevenue ?? 0);
+  
+  const totalSpend = ((last?.google ?? 0) + (last?.meta ?? 0)) * m;
   const avgRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(1) : null;
   const revenueGrowth = prev?.revenue ? (((last?.revenue ?? 0) - prev.revenue) / prev.revenue) * 100 : null;
+  
+  const ifoodRevenue = (ifoodSummary?.revenue?.month ?? 0) * m;
+  
   const monthGoal = goals[0];
   const topCampaigns = [...googleCampaigns].sort((a, b) => b.roas - a.roas).slice(0, 3);
 
-  const hasAnyData = totalRevenue > 0 || totalSpend > 0 || (ifoodSummary?.orders.month ?? 0) > 0;
+  const hasAnyData = totalRevenue > 0 || totalSpend > 0 || (ifoodSummary?.orders.month ?? 0) > 0 || (cardapioSummary?.totalOrders ?? 0) > 0;
+
+  const periodLabels: Record<string, string> = { 
+    "today": "Hoje",
+    "7d": "Últimos 7 dias", 
+    "30d": "Últimos 30 dias", 
+    "custom": "Personalizado",
+    "all": "Visão Global (Todo o Período)" 
+  };
 
   return (
     <div className="space-y-8">
@@ -48,9 +73,40 @@ export function DashboardView() {
         <div className="absolute bottom-0 right-20 w-48 h-48 bg-[#ff8732]/10 rounded-full blur-3xl" />
         <div className="relative flex items-start justify-between flex-wrap gap-6">
           <div className="flex-1 min-w-[280px]">
-            <Badge tone="orange" size="md" dot>
-              <Sparkles size={11} className="mr-0.5" /> {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-            </Badge>
+            <div className="flex items-center flex-wrap gap-3">
+              <Badge tone="orange" size="md" dot>
+                <Sparkles size={11} className="mr-0.5" /> {periodLabels[period]}
+              </Badge>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as any)}
+                className="bg-slate-800 text-slate-300 text-xs font-semibold px-2 py-1 rounded-md border border-slate-700 outline-none hover:border-slate-600 focus:border-[#ff8732] transition-colors"
+              >
+                <option value="today">Hoje</option>
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="all">Todo o Período</option>
+                <option value="custom">Personalizado</option>
+              </select>
+              
+              {period === "custom" && (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="date" 
+                    value={customDates.start}
+                    onChange={e => setCustomDates(d => ({ ...d, start: e.target.value }))}
+                    className="bg-slate-800 text-slate-300 text-xs font-semibold px-2 py-1 rounded-md border border-slate-700 outline-none focus:border-[#ff8732] transition-colors" 
+                  />
+                  <span className="text-slate-400 text-xs">até</span>
+                  <input 
+                    type="date" 
+                    value={customDates.end}
+                    onChange={e => setCustomDates(d => ({ ...d, end: e.target.value }))}
+                    className="bg-slate-800 text-slate-300 text-xs font-semibold px-2 py-1 rounded-md border border-slate-700 outline-none focus:border-[#ff8732] transition-colors" 
+                  />
+                </div>
+              )}
+            </div>
             {hasAnyData ? (
               <>
                 <h2 className="text-white text-4xl font-extrabold tracking-tight mt-4 leading-tight">
@@ -62,9 +118,9 @@ export function DashboardView() {
                   )}
                 </h2>
                 <p className="text-slate-300 text-base font-medium mt-2 max-w-xl">
-                  via marketing este mês{revenueGrowth !== null && (
-                    <> — <span className={`font-bold ${revenueGrowth >= 0 ? "text-emerald-400" : "text-red-400"}`}>{revenueGrowth >= 0 ? "+" : ""}{revenueGrowth.toFixed(1)}%</span> vs mês anterior</>
-                  )}{avgRoas && <>. ROAS médio em <span className="text-white font-bold">{avgRoas}x</span></>}.
+                  faturamento consolidado acumulado{revenueGrowth !== null && (
+                    <> — <span className={`font-bold ${revenueGrowth >= 0 ? "text-emerald-400" : "text-red-400"}`}>{revenueGrowth >= 0 ? "+" : ""}{revenueGrowth.toFixed(1)}%</span> vs mês anterior no tráfego</>
+                  )}{avgRoas && <>. ROAS médio global em <span className="text-white font-bold">{avgRoas}x</span></>}.
                 </p>
               </>
             ) : (
@@ -108,12 +164,26 @@ export function DashboardView() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <MetricCard label="Faturamento iFood" value={fmt.currencyCompact(ifoodSummary?.revenue.month ?? 0)} icon={DollarSign} color="#e01c1c" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+            <MetricCard label="Faturamento iFood" value={fmt.currencyCompact(ifoodRevenue)} icon={DollarSign} color="#e01c1c" />
             <MetricCard label="Investimento em Ads" value={fmt.currencyCompact(totalSpend)} icon={Target} color="#ff8732" />
             <MetricCard label="ROAS Médio" value={avgRoas ? `${avgRoas}x` : "—"} icon={TrendingUp} color="#10b981" />
             <MetricCard label="Avaliação iFood" value={(ifoodSummary?.rating ?? 0).toFixed(1)} icon={Star} color="#f59e0b" />
           </div>
+
+          {/* Métricas do Cardápio Digital (Cardápio Web) */}
+          {(cardapioSummary?.totalOrders ?? 0) > 0 && (
+            <div className="mb-5">
+              <h3 className="text-[16px] font-bold text-slate-900 dark:text-white mb-3">Cardápio Digital</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <MetricCard label="Acessos ao Cardápio" value={fmt.number(cardapioSummary?.acessos ?? 0)} icon={Target} color="#0ea5e9" />
+                <MetricCard label="Contatos WhatsApp" value={fmt.number(cardapioSummary?.whatsappContacts ?? 0)} icon={Sparkles} color="#22c55e" />
+                <MetricCard label="Vendas Finalizadas" value={fmt.number(cardapioSummary?.totalOrders ?? 0)} icon={ShoppingBag} color="#3b82f6" />
+                <MetricCard label="Faturamento Total" value={fmt.currencyCompact(cardapioSummary?.totalRevenue ?? 0)} icon={DollarSign} color="#10b981" />
+                <MetricCard label="Ticket Médio" value={fmt.currency(cardapioSummary?.avgTicket ?? 0)} icon={TrendingUp} color="#8b5cf6" />
+              </div>
+            </div>
+          )}
 
           {monthly.length > 1 && (
             <ChartCard title="Investimento vs Faturamento" subtitle={`Últimos ${monthly.length} meses`} height={300}>

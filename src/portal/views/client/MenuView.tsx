@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ConnectAccount, type TutorialStep, type QuickAction } from "../../components/ConnectAccount";
+import { MenuDashboard } from "../../components/MenuDashboard";
 import { useMyClient, useIntegration } from "../../lib/api";
 import { cn } from "../../lib/cn";
 import { supabase } from "../../lib/supabase";
@@ -350,6 +351,16 @@ export function MenuView() {
             quickActions={provider.quickActions}
             oauthNote={provider.oauthNote}
           />
+          
+          {activeProviders.includes(provider.id) && (
+            <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
+              <h3 className="text-[16px] font-bold text-slate-900 dark:text-white mb-2">Desempenho e Histórico</h3>
+              <p className="text-[13px] text-slate-500 dark:text-slate-400">
+                Acompanhe o volume de vendas e os pedidos mais recentes vindos deste canal.
+              </p>
+              <MenuDashboard clientId={cid} source={provider.id} />
+            </div>
+          )}
         </div>
       ) : (
         <EmptyState

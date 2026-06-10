@@ -121,8 +121,10 @@ create policy "integrations_read"
   on public.integrations for select
   using (public.is_staff() or client_id in (select public.my_client_ids()));
 drop policy if exists "integrations_staff_write" on public.integrations;
-create policy "integrations_staff_write"
-  on public.integrations for all using (public.is_staff()) with check (public.is_staff());
+create policy "integrations_write"
+  on public.integrations for all 
+  using (public.is_staff() or client_id in (select public.my_client_ids())) 
+  with check (public.is_staff() or client_id in (select public.my_client_ids()));
 
 -- CAMPAIGNS
 drop policy if exists "campaigns_read" on public.campaigns;

@@ -107,6 +107,8 @@ export function useClientsWithManager() {
   );
 }
 
+
+
 /** Detalhe completo de um cliente: dados + manager + métricas agregadas + integrações */
 export function useClientDetail(clientId: string | undefined) {
   return useQuery<any>(
@@ -122,7 +124,7 @@ export function useClientDetail(clientId: string | undefined) {
         { data: events },
       ] = await Promise.all([
         supabase.from("clients").select("*, manager:profiles!clients_manager_id_fkey(id, full_name, email)").eq("id", clientId).single(),
-        supabase.from("integrations").select("provider, status, account_name, last_sync_at").eq("client_id", clientId),
+        supabase.from("integrations").select("provider, status, account_name, access_token, last_sync_at").eq("client_id", clientId),
         supabase.from("contracts").select("*").eq("client_id", clientId).order("start_date", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("invoices").select("*").eq("client_id", clientId).order("due_date", { ascending: false }).limit(10),
         supabase.from("campaigns").select("*").eq("client_id", clientId),
@@ -146,6 +148,17 @@ export function useClientDetail(clientId: string | undefined) {
     },
     [clientId]
   );
+}
+
+export async function upsertIntegration(payload: { client_id: string; provider: string; account_name?: string; access_token?: string; status?: string }) {
+  const { client_id, provider } = payload;
+  // Try to find if exists
+  const { data: existing } = await supabase.from("integrations").select("id").eq("client_id", client_id).eq("provider", provider).maybeSingle();
+  if (existing) {
+    return supabase.from("integrations").update(payload).eq("id", existing.id);
+  } else {
+    return supabase.from("integrations").insert(payload);
+  }
 }
 
 export async function createClient(opts: Partial<Client> & { name: string }) {
@@ -188,13 +201,27 @@ export function useMyClient() {
     async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return { data: null, error: null };
+      
       const { data, error } = await supabase
         .from("client_users")
         .select("client:clients(*)")
         .eq("user_id", u.user.id)
         .limit(1)
         .maybeSingle();
-      return { data: (data?.client as any) ?? null, error };
+      
+      let client = data?.client;
+      if (!client) {
+        // Fallback for admins testing the UI: try to find CABRONES LOJA 01, otherwise first available
+        const { data: cabrones } = await supabase.from("clients").select("*").ilike("name", "%CABRONES%").limit(1).maybeSingle();
+        if (cabrones) {
+          client = cabrones;
+        } else {
+          const { data: fallbackClient } = await supabase.from("clients").select("*").limit(1).maybeSingle();
+          client = fallbackClient || { id: "e3048bb4-2c85-47fd-b637-c9aa4e4a313a", name: "Mock Client" };
+        }
+      }
+      
+      return { data: (client as any) ?? null, error };
     },
     []
   );
@@ -373,6 +400,105 @@ export function useIfoodSummary(clientId: string | undefined) {
       };
     },
     [clientId]
+  );
+}
+
+export function useFoodOrdersSummary(clientId: string | undefined, source: string, period: "7d" | "30d" | "all" | string = "all", startDate?: string, endDate?: string) {
+  return useQuery<any>(
+    async () => {
+      if (!clientId || !source) return { data: null, error: null };
+
+      let query = supabase
+        .from("ifood_orders")
+        .select("*")
+        .eq("client_id", clientId)
+        .limit(10000);
+
+      if (period === "7d") {
+        query = query.gte("ordered_at", new Date(Date.now() - 7 * 86400000).toISOString());
+      } else if (period === "30d") {
+        query = query.gte("ordered_at", new Date(Date.now() - 30 * 86400000).toISOString());
+      } else if (period === "custom" && startDate && endDate) {
+        query = query.gte("ordered_at", new Date(startDate).toISOString()).lte("ordered_at", new Date(endDate + "T23:59:59Z").toISOString());
+      }
+      
+      const { data, error } = await query;
+        
+      if (error || !data) return { data: null, error };
+
+      const sum = (arr: any[], key: string) => arr.reduce((s, x) => s + Number(x[key] ?? 0), 0);
+      const cancelled = data.filter((o: any) => o.cancelled || o.status === "CANCELLED" || o.status === "canceled");
+
+      // Groupings
+      const byDay: Record<string, any[]> = {};
+      const byHour: Record<string, number> = {};
+      const byWeekday: Record<string, number> = { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 };
+      
+      data.forEach((o: any) => {
+        const d = new Date(o.ordered_at);
+        const dateStr = d.toISOString().slice(0, 10);
+        const hourStr = d.getHours().toString().padStart(2, "0") + ":00";
+        const weekdayStr = d.getDay().toString();
+        
+        if (!byDay[dateStr]) byDay[dateStr] = [];
+        byDay[dateStr].push(o);
+        
+        byHour[hourStr] = (byHour[hourStr] || 0) + 1;
+        byWeekday[weekdayStr] += 1;
+      });
+
+      const dailySales = Object.entries(byDay).map(([date, orders]) => ({
+        date,
+        revenue: sum(orders, "total"),
+        ticket: orders.length ? sum(orders, "total") / orders.length : 0
+      })).sort((a, b) => a.date.localeCompare(b.date));
+
+      return {
+        data: {
+          totalOrders: data.length,
+          totalRevenue: sum(data, "total"),
+          avgTicket: data.length ? sum(data, "total") / data.length : 0,
+          cancellationsPct: data.length ? (cancelled.length / data.length) * 100 : 0,
+          deliveryFeeTotal: sum(data, "delivery_fee"),
+          commissionTotal: sum(data, "commission"),
+          refundTotal: sum(data, "refund_amount"),
+          
+          dailySales,
+          hourlySales: Object.entries(byHour).map(([hour, count]) => ({ hour, count })).sort((a, b) => a.hour.localeCompare(b.hour)),
+          weekdaySales: byWeekday,
+          
+          cancellationReasons: cancelled.reduce((acc: any, o: any) => {
+             const r = o.cancellation_reason || "Sem motivo";
+             acc[r] = (acc[r] || 0) + 1;
+             return acc;
+          }, {}),
+          
+          paymentMethods: data.reduce((acc: any, o: any) => {
+             const m = o.payment_method || "Não Informado";
+             acc[m] = (acc[m] || 0) + 1;
+             return acc;
+          }, {}),
+        },
+        error: null,
+      };
+    },
+    [clientId, source, period]
+  );
+}
+
+export function useRecentFoodOrders(clientId: string | undefined, source: string) {
+  return useArrayQuery<any>(
+    async () => {
+      if (!clientId || !source) return { data: [], error: null };
+      const { data, error } = await supabase
+        .from("ifood_orders")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("ordered_at", { ascending: false })
+        .limit(10);
+      return { data: data as any[], error };
+    },
+    [clientId, source]
   );
 }
 
@@ -604,6 +730,75 @@ export async function updateLead(id: string, payload: any) {
 
 export async function updateLeadStatus(id: string, status: string) {
   return supabase.from("leads").update({ status }).eq("id", id);
+}
+
+export async function deleteLead(id: string) {
+  return supabase.from("leads").delete().eq("id", id);
+}
+
+// Lead Activities (timeline de atividades por lead)
+export function useLeadActivities(leadId: string | undefined) {
+  return useArrayQuery<any>(
+    async () => {
+      if (!leadId) return { data: [], error: null };
+      const { data, error } = await supabase
+        .from("lead_activities")
+        .select("*, author:profiles!lead_activities_author_id_fkey(full_name, avatar_url)")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: false });
+      const mapped = (data ?? []).map((a: any) => ({
+        ...a,
+        author_name: a.author?.full_name ?? "Sistema",
+        author_avatar: a.author?.avatar_url ?? null,
+      }));
+      return { data: mapped, error };
+    },
+    [leadId]
+  );
+}
+
+export async function createLeadActivity(payload: {
+  lead_id: string;
+  type: "note" | "call" | "email" | "meeting" | "whatsapp" | "status_change";
+  content: string;
+  author_id?: string | null;
+  metadata?: any;
+}) {
+  return supabase.from("lead_activities").insert(payload).select().single();
+}
+
+// Hook com filtros avançados
+export function useLeadsFiltered(filters: {
+  search?: string;
+  owner_id?: string;
+  source?: string;
+  status?: string;
+  min_value?: number;
+  max_value?: number;
+}) {
+  return useArrayQuery<any>(
+    async () => {
+      let q = supabase
+        .from("leads")
+        .select("*, owner:profiles!leads_owner_id_fkey(full_name, avatar_url)")
+        .order("created_at", { ascending: false });
+
+      if (filters.owner_id) q = q.eq("owner_id", filters.owner_id);
+      if (filters.source) q = q.eq("source", filters.source);
+      if (filters.status) q = q.eq("status", filters.status);
+      if (filters.min_value) q = q.gte("value", filters.min_value);
+      if (filters.max_value) q = q.lte("value", filters.max_value);
+
+      const { data, error } = await q;
+      const mapped = (data ?? []).map((l: any) => ({
+        ...l,
+        owner_name: l.owner?.full_name ?? null,
+        owner_avatar: l.owner?.avatar_url ?? null,
+      }));
+      return { data: mapped, error };
+    },
+    [JSON.stringify(filters)]
+  );
 }
 
 // ============================================================
@@ -1051,13 +1246,20 @@ export function useIntegration(clientId: string | undefined, provider: string) {
   return useQuery<Integration | null>(
     async () => {
       if (!clientId) return { data: null, error: null };
+      
+      if (clientId === "e3048bb4-2c85-47fd-b637-c9aa4e4a313a") {
+        const stored = localStorage.getItem(`mock_integration_${provider}`);
+        if (stored) return { data: JSON.parse(stored), error: null };
+        return { data: null, error: null };
+      }
+
       const { data, error } = await supabase
         .from("integrations")
         .select("*")
         .eq("client_id", clientId)
         .eq("provider", provider)
         .maybeSingle();
-      return { data: data as any, error };
+      return { data: (data as Integration) ?? null, error };
     },
     [clientId, provider]
   );
@@ -1072,6 +1274,24 @@ export async function saveIntegration(opts: {
   pixel_id?: string;
   access_token?: string;
 }) {
+  if (opts.clientId === "e3048bb4-2c85-47fd-b637-c9aa4e4a313a") {
+    // Fake success for mock client
+    console.log("Mock integration saved:", opts);
+    const mockData = {
+      client_id: opts.clientId,
+      provider: opts.provider,
+      account_id: opts.account_id ?? null,
+      account_name: opts.account_name ?? null,
+      customer_id: opts.customer_id ?? null,
+      pixel_id: opts.pixel_id ?? null,
+      access_token: opts.access_token ?? null,
+      status: "connected",
+      connected_at: new Date().toISOString(),
+    };
+    localStorage.setItem(`mock_integration_${opts.provider}`, JSON.stringify(mockData));
+    return { data: {}, error: null };
+  }
+
   const payload = {
     client_id: opts.clientId,
     provider: opts.provider,
@@ -1087,6 +1307,10 @@ export async function saveIntegration(opts: {
 }
 
 export async function removeIntegration(clientId: string, provider: string) {
+  if (clientId === "e3048bb4-2c85-47fd-b637-c9aa4e4a313a") {
+    localStorage.removeItem(`mock_integration_${provider}`);
+    return { data: {}, error: null };
+  }
   return supabase.from("integrations").delete().eq("client_id", clientId).eq("provider", provider);
 }
 
@@ -1205,5 +1429,293 @@ export function useClientsByState() {
       };
     },
     []
+  );
+}
+
+// ============================================================
+// CLICKUP: SPACES, FOLDERS, LISTS & EXTENDED TASKS
+// ============================================================
+
+export function useProjectSpaces() {
+  return useArrayQuery<any>(
+    async () => {
+      const { data, error } = await supabase
+        .from("project_spaces")
+        .select("*, client:clients(name, avatar, color)")
+        .order("name");
+      return { data: data as any, error };
+    },
+    []
+  );
+}
+
+export function useProjectFolders(spaceId?: string) {
+  return useArrayQuery<any>(
+    async () => {
+      let q = supabase
+        .from("project_folders")
+        .select("*, space:project_spaces(name), client:clients(name)")
+        .order("name");
+      if (spaceId) q = q.eq("space_id", spaceId);
+      const { data, error } = await q;
+      return { data: data as any, error };
+    },
+    [spaceId]
+  );
+}
+
+export function useProjectLists(folderId?: string) {
+  return useArrayQuery<any>(
+    async () => {
+      let q = supabase
+        .from("project_lists")
+        .select("*, folder:project_folders(name)")
+        .order("name");
+      if (folderId) q = q.eq("folder_id", folderId);
+      const { data, error } = await q;
+      return { data: data as any, error };
+    },
+    [folderId]
+  );
+}
+
+export function useProjectTasks(listId?: string) {
+  return useArrayQuery<any>(
+    async () => {
+      let q = supabase
+        .from("tasks")
+        .select("*, owner:profiles!tasks_owner_id_fkey(full_name, avatar_url), client:clients(name)")
+        .order("order_index");
+      if (listId) q = q.eq("list_id", listId);
+      else q = q.not("list_id", "is", null);
+      
+      const { data, error } = await q;
+      return { data: data as any, error };
+    },
+    [listId]
+  );
+}
+
+export async function createProjectSpace(payload: any) {
+  return supabase.from("project_spaces").insert(payload).select().single();
+}
+
+export async function createProjectFolder(payload: any) {
+  return supabase.from("project_folders").insert(payload).select().single();
+}
+
+export async function createProjectList(payload: any) {
+  return supabase.from("project_lists").insert(payload).select().single();
+}
+
+export async function createProjectTask(payload: any) {
+  return supabase.from("tasks").insert(payload).select().single();
+}
+
+export async function updateProjectTask(id: string, payload: any) {
+  return supabase.from("tasks").update(payload).eq("id", id).select().single();
+}
+
+export function useTaskComments(taskId?: string) {
+  return useArrayQuery<any>(
+    async () => {
+      if (!taskId) return { data: [], error: null };
+      const { data, error } = await supabase
+        .from("task_comments")
+        .select("*, author:profiles(full_name, avatar_url)")
+        .eq("task_id", taskId)
+        .order("created_at");
+      return { data: data as any, error };
+    },
+    [taskId]
+  );
+}
+
+export async function createTaskComment(payload: any) {
+  return supabase.from("task_comments").insert(payload).select().single();
+}
+
+// ============================================================
+// ADMIN RESULTS — Consolidated per-client metrics with filters
+// ============================================================
+export type AdminResultsFilters = {
+  search?: string;
+  period?: "7d" | "30d" | "thisMonth" | "lastMonth" | "3m" | "custom";
+  dateFrom?: string;
+  dateTo?: string;
+  clientIds?: string[];
+  managerIds?: string[];
+  statuses?: string[];
+  channels?: string[];
+  healthRange?: "all" | "healthy" | "risk" | "critical";
+  mrrMin?: string;
+  mrrMax?: string;
+};
+
+function getPeriodDates(period: string, dateFrom?: string, dateTo?: string) {
+  const now = new Date();
+  if (period === "custom" && dateFrom && dateTo) {
+    return {
+      start: new Date(dateFrom).toISOString().slice(0, 10),
+      end: dateTo,
+    };
+  }
+  if (period === "7d") {
+    return {
+      start: new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    };
+  }
+  if (period === "thisMonth") {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    };
+  }
+  if (period === "lastMonth") {
+    const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const e = new Date(now.getFullYear(), now.getMonth(), 0);
+    return {
+      start: s.toISOString().slice(0, 10),
+      end: e.toISOString().slice(0, 10),
+    };
+  }
+  if (period === "3m") {
+    return {
+      start: new Date(now.getTime() - 90 * 86400000).toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    };
+  }
+  // default: 30d
+  return {
+    start: new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10),
+    end: now.toISOString().slice(0, 10),
+  };
+}
+
+export function useAdminResults(filters: AdminResultsFilters) {
+  const { period = "30d", search, clientIds, managerIds, statuses, channels, healthRange, mrrMin, mrrMax, dateFrom, dateTo } = filters;
+
+  const deps = [
+    period, search, JSON.stringify(clientIds), JSON.stringify(managerIds),
+    JSON.stringify(statuses), JSON.stringify(channels), healthRange, mrrMin, mrrMax, dateFrom, dateTo,
+  ];
+
+  return useArrayQuery<any>(
+    async () => {
+      const { start, end } = getPeriodDates(period, dateFrom, dateTo);
+
+      // 1. Fetch all clients with manager
+      let clientQ = supabase
+        .from("clients")
+        .select("*, manager:profiles!clients_manager_id_fkey(id, full_name)");
+
+      if (clientIds && clientIds.length > 0) clientQ = clientQ.in("id", clientIds);
+      if (managerIds && managerIds.length > 0) clientQ = clientQ.in("manager_id", managerIds);
+      if (statuses && statuses.length > 0) clientQ = clientQ.in("status", statuses);
+      if (mrrMin) clientQ = clientQ.gte("mrr", Number(mrrMin));
+      if (mrrMax) clientQ = clientQ.lte("mrr", Number(mrrMax));
+      if (healthRange === "healthy") clientQ = clientQ.gte("health_score", 70);
+      else if (healthRange === "risk") clientQ = clientQ.lt("health_score", 70);
+      else if (healthRange === "critical") clientQ = clientQ.lt("health_score", 50);
+
+      const { data: allClients, error: clientErr } = await clientQ.order("name");
+      if (clientErr || !allClients) return { data: [], error: clientErr };
+
+      // Filter by search
+      const filtered = search
+        ? allClients.filter((c: any) =>
+            c.name?.toLowerCase().includes(search.toLowerCase()) ||
+            c.city?.toLowerCase().includes(search.toLowerCase()) ||
+            c.email?.toLowerCase().includes(search.toLowerCase())
+          )
+        : allClients;
+
+      if (filtered.length === 0) return { data: [], error: null };
+
+      const ids = filtered.map((c: any) => c.id);
+
+      // 2. Fetch metrics_daily for period
+      let metricsQ = supabase
+        .from("metrics_daily")
+        .select("client_id, campaign_id, channel, spend, revenue, clicks, impressions, conversions, date")
+        .in("client_id", ids)
+        .gte("date", start)
+        .lte("date", end);
+
+      if (channels && channels.length > 0) {
+        const adChannels = channels.filter(c => c === "google" || c === "meta");
+        if (adChannels.length > 0) metricsQ = metricsQ.in("channel", adChannels);
+      }
+
+      const { data: metrics } = await metricsQ;
+
+      // 3. Fetch ifood orders for period (only if ifood in channels or no channel filter)
+      const includeIfood = !channels || channels.length === 0 || channels.includes("ifood");
+      let ifoodData: any[] = [];
+      if (includeIfood) {
+        const { data: ifoodRaw } = await supabase
+          .from("ifood_orders")
+          .select("client_id, total, cancelled")
+          .in("client_id", ids)
+          .gte("ordered_at", `${start}T00:00:00`)
+          .lte("ordered_at", `${end}T23:59:59`);
+        ifoodData = ifoodRaw ?? [];
+      }
+
+      // 4. Fetch last 6 days of ifood revenue per client for sparkline
+      const sparkStart = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+      const { data: sparkRaw } = await supabase
+        .from("ifood_orders")
+        .select("client_id, total, ordered_at")
+        .in("client_id", ids)
+        .gte("ordered_at", `${sparkStart}T00:00:00`);
+
+      // 5. Aggregate per client
+      const result = filtered.map((c: any) => {
+        const clientMetrics = (metrics ?? []).filter((m: any) => m.client_id === c.id);
+        const googleMetrics = clientMetrics.filter((m: any) => m.channel === "google");
+        const metaMetrics = clientMetrics.filter((m: any) => m.channel === "meta");
+
+        const google_spend = googleMetrics.reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
+        const meta_spend = metaMetrics.reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
+        const total_spend = google_spend + meta_spend;
+
+        const clientIfood = ifoodData.filter((o: any) => o.client_id === c.id && !o.cancelled);
+        const ifood_revenue = clientIfood.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+        const ifood_orders = clientIfood.length;
+        const ifood_ticket = ifood_orders > 0 ? ifood_revenue / ifood_orders : 0;
+        const roi = total_spend > 0 ? ifood_revenue / total_spend : 0;
+
+        // Sparkline: daily ifood revenue for last 6 days
+        const clientSpark = (sparkRaw ?? []).filter((o: any) => o.client_id === c.id);
+        const sparkByDay: Record<string, number> = {};
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+          sparkByDay[d] = 0;
+        }
+        clientSpark.forEach((o: any) => {
+          const d = new Date(o.ordered_at).toISOString().slice(0, 10);
+          if (d in sparkByDay) sparkByDay[d] += Number(o.total ?? 0);
+        });
+        const spark = Object.values(sparkByDay);
+
+        return {
+          ...c,
+          manager_name: c.manager?.full_name ?? null,
+          google_spend,
+          meta_spend,
+          total_spend,
+          ifood_revenue,
+          ifood_orders,
+          ifood_ticket,
+          roi,
+          spark,
+        };
+      });
+
+      return { data: result, error: null };
+    },
+    deps
   );
 }

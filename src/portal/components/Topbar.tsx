@@ -22,9 +22,10 @@ interface TopbarProps {
   clientName?: string;
   onOpenCommand?: () => void;
   currentUser?: CurrentUser;
+  onNavigate?: (id: string) => void;
 }
 
-export function Topbar({ type, active, pendingCount = 0, onOpenCommand, currentUser }: TopbarProps) {
+export function Topbar({ type, active, pendingCount = 0, onOpenCommand, currentUser, onNavigate }: TopbarProps) {
   const { theme, setTheme } = useTheme();
 
   const allNav = type === "admin" ? ADMIN_NAV : CLIENT_NAV;
@@ -106,8 +107,8 @@ export function Topbar({ type, active, pendingCount = 0, onOpenCommand, currentU
               </div>
             </DropdownSection>
             <DropdownSection>
-              <DropdownItem icon={<User size={15} />}>Meu perfil</DropdownItem>
-              <DropdownItem icon={<Settings size={15} />}>Configurações</DropdownItem>
+              <DropdownItem icon={<User size={15} />} onClick={() => onNavigate?.("settings")}>Meu perfil</DropdownItem>
+              <DropdownItem icon={<Settings size={15} />} onClick={() => onNavigate?.("settings")}>Configurações</DropdownItem>
             </DropdownSection>
             <DropdownSection>
               <DropdownItem icon={<LogOut size={15} />} destructive onClick={logout}>

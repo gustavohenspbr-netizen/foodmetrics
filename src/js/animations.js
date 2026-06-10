@@ -4,10 +4,9 @@ import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger);
 
-document.addEventListener("DOMContentLoaded", () => {
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const isFinePointer = window.matchMedia("(pointer: fine)").matches;
-  const isDesktop = window.matchMedia("(min-width: 901px)").matches;
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isFinePointer = window.matchMedia("(pointer: fine)").matches;
+const isDesktop = window.matchMedia("(min-width: 901px)").matches;
 
   // ============================================================
   // 1. Lenis Smooth Scroll
@@ -378,4 +377,4 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
-});
+

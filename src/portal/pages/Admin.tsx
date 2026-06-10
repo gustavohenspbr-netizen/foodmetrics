@@ -13,6 +13,8 @@ import { FinanceView } from "../views/admin/FinanceView";
 import { ContractsView } from "../views/admin/ContractsView";
 import { ReportsView } from "../views/admin/ReportsView";
 import { MessagesView } from "../views/admin/MessagesView";
+import { ResultsView } from "../views/admin/ResultsView";
+import { SettingsView } from "../views/shared/SettingsView";
 
 export function AdminPage() {
   const [active, setActive] = useState("dashboard");
@@ -40,9 +42,11 @@ export function AdminPage() {
     );
   }
 
+  const pendingCount = 0; // Temporário, depois puxamos do useAdminOverview() ou clients
+
   return (
     <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0B1120] text-slate-900 dark:text-slate-50 overflow-hidden font-sans">
-      <Sidebar type="admin" active={active} setActive={setActive} pendingCount={2} />
+      <Sidebar type="admin" active={active} setActive={setActive} pendingCount={pendingCount} />
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <Topbar
@@ -58,6 +62,7 @@ export function AdminPage() {
                 }
               : undefined
           }
+          onNavigate={setActive}
         />
 
         <div className="flex-1 overflow-y-auto p-10 pb-20">
@@ -68,10 +73,12 @@ export function AdminPage() {
             {active === "traffic" && <TrafficView />}
             {active === "crm" && <CRMView />}
             {active === "schedule" && <ScheduleView />}
-            {active === "team" && <TeamView />}
+            {active === "projects" && <TeamView />}
             {active === "finance" && <FinanceView />}
             {active === "contracts" && <ContractsView />}
             {active === "reports" && <ReportsView />}
+            {active === "results" && <ResultsView />}
+            {active === "settings" && <SettingsView />}
           </div>
         </div>
       </main>

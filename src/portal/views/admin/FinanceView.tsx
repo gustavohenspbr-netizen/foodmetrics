@@ -1,5 +1,5 @@
-import React from "react";
-import { DollarSign, ArrowDownRight, FileText, ArrowUpRight, Download, Filter } from "lucide-react";
+import React, { useState } from "react";
+import { DollarSign, ArrowDownRight, FileText, ArrowUpRight, Download, Filter, Plus } from "lucide-react";
 import { MetricCard } from "../../components/MetricCard";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Badge } from "../../components/ui/Badge";
@@ -8,9 +8,12 @@ import { Avatar } from "../../components/ui/Avatar";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { fmt } from "../../lib/format";
 import { useInvoices } from "../../lib/api";
+import { InvoiceModal } from "../../components/InvoiceModal";
 
 export function FinanceView() {
-  const { data: invoices = [], loading } = useInvoices();
+  const { data: invoices = [], loading, refetch } = useInvoices();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const paid = invoices.filter((i: any) => i.status === "paid").reduce((s, i: any) => s + Number(i.amount ?? 0), 0);
   const overdue = invoices.filter((i: any) => i.status === "overdue").reduce((s, i: any) => s + Number(i.amount ?? 0), 0);
   const pending = invoices.filter((i: any) => i.status === "pending").reduce((s, i: any) => s + Number(i.amount ?? 0), 0);
@@ -33,6 +36,8 @@ export function FinanceView() {
       render: (row) => <span className="text-[12px] font-bold text-slate-900 dark:text-white">{fmt.date(row.due_date)}</span> },
     { key: "amount", header: "Valor", align: "right",
       render: (row) => <span className="font-bold text-slate-900 dark:text-white tabular-nums">{fmt.currency(Number(row.amount ?? 0))}</span> },
+    { key: "payment_method", header: "Forma de PG",
+      render: (row) => <span className="text-[12px] font-medium text-slate-600 dark:text-slate-400 capitalize">{row.payment_method?.replace("_", " ") || "PIX"}</span> },
     { key: "status", header: "Status",
       render: (row) => {
         const map: Record<string, "success" | "warning" | "danger"> = { paid: "success", pending: "warning", overdue: "danger" };
@@ -40,7 +45,12 @@ export function FinanceView() {
         return <Badge tone={map[row.status] ?? "neutral"}>{label[row.status] ?? row.status}</Badge>;
       } },
     { key: "actions", header: "", sortable: false, align: "right",
-      render: () => <Button size="xs" variant="ghost" icon={Download} /> },
+      render: (row) => (
+        <div className="flex gap-2 justify-end">
+          {row.url && <Button size="xs" variant="ghost" onClick={() => window.open(row.url, "_blank")}>Pagar</Button>}
+          <Button size="xs" variant="ghost" icon={Download} />
+        </div>
+      ) },
   ];
 
   return (
@@ -52,7 +62,7 @@ export function FinanceView() {
         </div>
         <div className="flex gap-3">
           <Button variant="outline" icon={Filter} size="sm">Filtros</Button>
-          <Button variant="primary" size="sm">Nova Cobrança</Button>
+          <Button variant="primary" size="sm" icon={Plus} onClick={() => setIsModalOpen(true)}>Nova Cobrança</Button>
         </div>
       </div>
 
@@ -75,6 +85,15 @@ export function FinanceView() {
           rowKey={(r) => r.id}
         />
       )}
+
+      <InvoiceModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={() => {
+          setIsModalOpen(false);
+          refetch();
+        }} 
+      />
     </div>
   );
 }

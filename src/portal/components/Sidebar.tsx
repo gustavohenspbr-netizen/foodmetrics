@@ -10,6 +10,7 @@ import {
   CreditCard,
   Briefcase,
   BarChart2,
+  BarChart3,
   ShoppingBag,
   PieChart,
   MessageSquare,
@@ -36,12 +37,13 @@ interface NavItem {
 
 export const ADMIN_NAV: NavItem[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Visão Geral", section: "Início" },
+  { id: "results", icon: BarChart3, label: "Resultados", section: "Operação" },
   { id: "clients", icon: Users, label: "Clientes", section: "Operação" },
   { id: "messages", icon: MessageSquare, label: "Mensagens", section: "Operação" },
   { id: "traffic", icon: Activity, label: "Operação de Tráfego", section: "Operação" },
   { id: "crm", icon: Briefcase, label: "CRM", section: "Operação" },
   { id: "schedule", icon: Calendar, label: "Agenda", section: "Operação" },
-  { id: "team", icon: UserCog, label: "Equipe & Tarefas", section: "Gestão" },
+  { id: "projects", icon: Target, label: "Projetos & Equipe", section: "Gestão" },
   { id: "finance", icon: CreditCard, label: "Financeiro", section: "Gestão" },
   { id: "contracts", icon: FileSignature, label: "Contratos", section: "Gestão" },
   { id: "reports", icon: FileText, label: "Relatórios", section: "Gestão" },
@@ -80,7 +82,9 @@ export function Sidebar({ type, active, setActive, pendingCount = 0, clientInfo 
   const [collapsed, setCollapsed] = useState(false);
   const unreadMessages = useUnreadCount();
 
-  function logout() {
+  async function logout() {
+    const { signOut } = await import("../lib/auth");
+    await signOut();
     sessionStorage.clear();
     window.location.href = "/login.html";
   }

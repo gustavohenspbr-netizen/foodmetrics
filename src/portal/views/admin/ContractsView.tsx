@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { FileSignature, Download, Eye, Plus, AlertCircle } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
@@ -8,9 +8,11 @@ import { MetricCard } from "../../components/MetricCard";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { fmt } from "../../lib/format";
 import { useContracts } from "../../lib/api";
+import { ContractModal } from "../../components/ContractModal";
 
 export function ContractsView() {
-  const { data: contracts = [], loading } = useContracts();
+  const { data: contracts = [], loading, refetch } = useContracts();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const totalMRR = contracts.reduce((s, c: any) => s + Number(c.monthly_value ?? 0), 0);
   const today = Date.now();
@@ -101,7 +103,7 @@ export function ContractsView() {
             Documentos, escopo, prazos e assinaturas
           </p>
         </div>
-        <Button variant="primary" icon={Plus} size="sm">Novo Contrato</Button>
+        <Button variant="primary" icon={Plus} size="sm" onClick={() => setIsModalOpen(true)}>Novo Contrato</Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -122,6 +124,15 @@ export function ContractsView() {
           rowKey={(r) => r.id}
         />
       )}
+
+      <ContractModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={() => {
+          setIsModalOpen(false);
+          refetch();
+        }} 
+      />
     </div>
   );
 }

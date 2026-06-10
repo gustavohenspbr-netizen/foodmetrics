@@ -76,7 +76,10 @@ export function ConnectAccount({
   }, [integration]);
 
   async function handleSave() {
-    if (!clientId) return;
+    if (!clientId) {
+      toast.error("Erro interno", "Cliente não identificado. Atualize a página ou verifique o login.");
+      return;
+    }
     setSaving(true);
     const { error } = await saveIntegration({ clientId, provider, ...values });
     setSaving(false);

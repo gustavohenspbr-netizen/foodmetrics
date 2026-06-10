@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   MapPin, Mail, Calendar, CreditCard, FileSignature, Link2,
   Edit, Trash2, Pause, Play, MessageSquare, Phone, Camera, Globe,
-  CheckCircle2, ExternalLink, Activity, MessageCircle, Building2, Copy,
+  CheckCircle2, ExternalLink, Activity, MessageCircle, Building2, Copy, Save, X
 } from "lucide-react";
 import { Drawer } from "./ui/Drawer";
 import { Badge } from "./ui/Badge";
@@ -15,7 +15,7 @@ import { Skeleton } from "./ui/Skeleton";
 import { EmptyState } from "./ui/EmptyState";
 import { useToast } from "./ui/Toast";
 import { ClientFormModal } from "./ClientFormModal";
-import { useClientDetail, updateClient, deleteClient } from "../lib/api";
+import { useClientDetail, updateClient, deleteClient, upsertIntegration } from "../lib/api";
 import { fmt } from "../lib/format";
 import { buildWhatsAppUrl, formatPhoneDisplay, waTemplates } from "../lib/whatsapp";
 
@@ -51,6 +51,7 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
   const { data, loading, refetch } = useClientDetail(clientId ?? undefined);
   const [tab, setTab] = useState("overview");
   const [editOpen, setEditOpen] = useState(false);
+  const [configCardapioOpen, setConfigCardapioOpen] = useState(false);
 
   async function togglePause() {
     if (!data) return;
@@ -473,13 +474,21 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
             {tab === "marketing" && (
               <div className="space-y-4">
                 <Card>
-                  <CardHeader title="Integrações conectadas" subtitle={`${data.integrations.length} ativas`} />
+                  <CardHeader 
+                    title="Integrações conectadas" 
+                    subtitle={`${data.integrations.length} ativas`} 
+                    action={<Button size="xs" variant="primary" onClick={() => setConfigCardapioOpen(true)}>+ Cardápio Web</Button>}
+                  />
                   {data.integrations.length === 0 ? (
                     <EmptyState icon={Link2} title="Sem integrações" description="O cliente ainda não conectou nenhuma plataforma." />
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {data.integrations.map((i: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200/60 dark:border-slate-800/60">
+                        <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200/60 dark:border-slate-800/60 cursor-pointer hover:bg-slate-100 dark:hover:bg-[#111]" onClick={() => {
+                          if (i.provider === "cardapioweb") {
+                            setConfigCardapioOpen(true);
+                          }
+                        }}>
                           <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                             <CheckCircle2 size={16} />
                           </div>
@@ -571,6 +580,19 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
           onChanged?.();
         }}
       />
+
+      {data && (
+        <ConfigCardapioWebModal
+          open={configCardapioOpen}
+          onClose={() => setConfigCardapioOpen(false)}
+          clientId={data.id}
+          integrations={data.integrations}
+          onSaved={() => {
+            refetch();
+            onChanged?.();
+          }}
+        />
+      )}
     </>
   );
 }
@@ -640,5 +662,112 @@ function WhatsAppTemplate({ label, message, whatsapp }: { label: string; message
       </div>
       <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">{message}</p>
     </a>
+  );
+}
+
+function ConfigCardapioWebModal({
+  open,
+  onClose,
+  clientId,
+  integrations,
+  onSaved,
+}: {
+  open: boolean;
+  onClose: () => void;
+  clientId: string;
+  integrations: any[];
+  onSaved: () => void;
+}) {
+  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const existing = integrations.find(i => i.provider === "cardapioweb") || {};
+  const [storeId, setStoreId] = useState(existing.account_name || "");
+  const [token, setToken] = useState(existing.access_token || "");
+
+  async function handleSave() {
+    setLoading(true);
+    try {
+      const { error } = await upsertIntegration({
+        client_id: clientId,
+        provider: "cardapioweb",
+        account_name: storeId,
+        access_token: token,
+        status: "active"
+      });
+      if (error) throw error;
+      toast.success("Integração salva", "Cardápio Web configurado com sucesso.");
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      toast.error("Erro ao salvar", e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Webhook endpoint
+  // Para fins reais em produção deveria ser process.env.SUPABASE_URL...
+  const webhookUrl = `https://vsuijwcdbptxabrmfihm.supabase.co/functions/v1/webhook`;
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#0F172A] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-[#0B1120]">
+          <div>
+            <h3 className="text-[15px] font-extrabold text-slate-900 dark:text-white">Cardápio Web</h3>
+            <p className="text-[12px] text-slate-500 font-medium mt-0.5">Configurar integração</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto space-y-4">
+          <div>
+            <label className="block text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">ID da Loja (Store ID)</label>
+            <input
+              type="text"
+              className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1120] text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#e01c1c] focus:ring-1 focus:ring-[#e01c1c]"
+              placeholder="Ex: LOJA-123"
+              value={storeId}
+              onChange={(e) => setStoreId(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Token de API</label>
+            <input
+              type="password"
+              className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0B1120] text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#e01c1c] focus:ring-1 focus:ring-[#e01c1c]"
+              placeholder="Insira o Token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+            />
+          </div>
+          
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/40">
+            <label className="block text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">URL do Webhook (Cole no Cardápio Web)</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0B1120]/50 text-[11px] text-slate-500 dark:text-slate-400 outline-none"
+                value={webhookUrl}
+              />
+              <Button size="sm" variant="outline" icon={Copy} onClick={() => {
+                navigator.clipboard.writeText(webhookUrl);
+                toast.success("Copiado!", "URL do Webhook copiada.");
+              }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-[#0B1120]">
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" icon={Save} loading={loading} onClick={handleSave}>Salvar</Button>
+        </div>
+      </div>
+    </div>
   );
 }

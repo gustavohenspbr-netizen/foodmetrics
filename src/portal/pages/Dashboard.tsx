@@ -17,6 +17,7 @@ import { MaterialsView } from "../views/client/MaterialsView";
 import { MessagesView } from "../views/client/MessagesView";
 import { ClientReportsView } from "../views/client/ClientReportsView";
 import { ClientFinanceView } from "../views/client/ClientFinanceView";
+import { SettingsView } from "../views/shared/SettingsView";
 
 export function ClientDashboard() {
   const [active, setActive] = useState("dashboard");
@@ -38,8 +39,8 @@ export function ClientDashboard() {
 
   if (loading || !user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120]">
-        <div className="w-12 h-12 rounded-full border-4 border-[#e01c1c]/20 border-t-[#e01c1c] animate-spin" />
+      <div className="flex h-screen items-center justify-center bg-red-500 text-white text-4xl">
+        CARREGANDO USER...
       </div>
     );
   }
@@ -59,6 +60,7 @@ export function ClientDashboard() {
           active={active}
           clientName={client.restaurant}
           currentUser={profile ? { name: profile.full_name ?? profile.email, email: profile.email, role: "Cliente" } : undefined}
+          onNavigate={setActive}
         />
 
         <div className="flex-1 overflow-y-auto p-10 pb-20">
@@ -76,6 +78,7 @@ export function ClientDashboard() {
             {active === "messages" && <MessagesView />}
             {active === "reports" && <ClientReportsView />}
             {active === "finance" && <ClientFinanceView />}
+            {active === "settings" && <SettingsView />}
           </div>
         </div>
       </main>
