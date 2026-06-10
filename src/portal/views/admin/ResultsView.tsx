@@ -24,12 +24,12 @@ import { ClientDetailDrawer } from "../../components/ClientDetailDrawer";
 type SortDir = "asc" | "desc";
 type SortKey =
   | "name" | "status" | "mrr" | "health_score"
-  | "google_spend" | "meta_spend" | "ifood_revenue"
+  | "google_spend" | "meta_spend" | "tiktok_spend" | "gmb_views" | "gmb_calls" | "tripadvisor_reviews" | "tripadvisor_rating" | "ifood_revenue"
   | "ifood_orders" | "ifood_ticket" | "roi" | "manager_name";
 
 type Filters = {
   search: string;
-  period: "7d" | "30d" | "thisMonth" | "lastMonth" | "3m" | "custom";
+  period: "today" | "yesterday" | "7d" | "14d" | "30d" | "thisMonth" | "lastMonth" | "3m" | "thisYear" | "custom";
   dateFrom: string;
   dateTo: string;
   clientIds: string[];
@@ -39,6 +39,8 @@ type Filters = {
   healthRange: "all" | "healthy" | "risk" | "critical";
   mrrMin: string;
   mrrMax: string;
+  cities: string[];
+  types: string[];
 };
 
 const DEFAULT_FILTERS: Filters = {
@@ -53,14 +55,20 @@ const DEFAULT_FILTERS: Filters = {
   healthRange: "all",
   mrrMin: "",
   mrrMax: "",
+  cities: [],
+  types: [],
 };
 
 const PERIOD_LABELS: Record<string, string> = {
+  "today": "Hoje",
+  "yesterday": "Ontem",
   "7d": "Últimos 7 dias",
+  "14d": "Últimos 14 dias",
   "30d": "Últimos 30 dias",
   "thisMonth": "Este mês",
   "lastMonth": "Mês passado",
   "3m": "Últimos 3 meses",
+  "thisYear": "Este ano",
   "custom": "Período personalizado",
 };
 
@@ -74,8 +82,10 @@ const STATUS_OPTIONS = [
 const CHANNEL_OPTIONS = [
   { value: "google", label: "Google Ads", color: "#4285F4" },
   { value: "meta", label: "Meta Ads", color: "#1877F2" },
+  { value: "tiktok", label: "TikTok Ads", color: "#00f2fe" },
   { value: "ifood", label: "iFood", color: "#EA1D2C" },
   { value: "gmb", label: "Google Meu Negócio", color: "#34A853" },
+  { value: "tripadvisor", label: "TripAdvisor", color: "#34E0A1" },
 ];
 
 const HEALTH_OPTIONS = [
@@ -89,6 +99,9 @@ const RANK_METRIC_OPTIONS = [
   { value: "mrr", label: "MRR" },
   { value: "google_spend", label: "Verba Google" },
   { value: "meta_spend", label: "Verba Meta" },
+  { value: "tiktok_spend", label: "Verba TikTok" },
+  { value: "gmb_views", label: "Visualizações GMN" },
+  { value: "tripadvisor_reviews", label: "Avaliações TripAdvisor" },
   { value: "ifood_revenue", label: "Faturamento iFood" },
   { value: "ifood_orders", label: "Pedidos iFood" },
   { value: "roi", label: "ROI Geral" },
@@ -242,6 +255,16 @@ export function ResultsView() {
   const { data: team = [] } = useTeam();
   const { data: results = [], loading: lResults } = useAdminResults(filters);
 
+  const typeOptions = useMemo(() => {
+    const typesSet = new Set(clients.map(c => c.type).filter(Boolean));
+    return Array.from(typesSet).map(t => ({ value: t as string, label: t as string }));
+  }, [clients]);
+
+  const cityOptions = useMemo(() => {
+    const citiesSet = new Set(clients.map(c => c.city).filter(Boolean));
+    return Array.from(citiesSet).map(c => ({ value: c as string, label: c as string }));
+  }, [clients]);
+
   // ── Active filter count ──────────────────────────────────────────────────
   const activeFilterCount = useMemo(() => {
     let c = 0;
@@ -253,6 +276,8 @@ export function ResultsView() {
     if (filters.channels.length) c++;
     if (filters.healthRange !== "all") c++;
     if (filters.mrrMin || filters.mrrMax) c++;
+    if (filters.cities.length) c++;
+    if (filters.types.length) c++;
     return c;
   }, [filters]);
 
@@ -284,18 +309,31 @@ export function ResultsView() {
     const atRisk = results.filter((r: any) => r.health_score < 70).length;
     const googleSpend = sum("google_spend");
     const metaSpend = sum("meta_spend");
+    const tiktokSpend = sum("tiktok_spend");
     const ifoodRev = sum("ifood_revenue");
-    const totalSpend = googleSpend + metaSpend;
+    const totalSpend = googleSpend + metaSpend + tiktokSpend;
     const roi = totalSpend > 0 ? ifoodRev / totalSpend : 0;
+    const gmbViews = sum("gmb_views");
+    const tripReviews = sum("tripadvisor_reviews");
+    const avgTripRating = tripReviews > 0
+      ? results.reduce((s: number, r: any) => s + (r.tripadvisor_rating ?? 0) * (r.tripadvisor_reviews ?? 0), 0) / tripReviews
+      : 0;
+
     return {
       totalMrr: sum("mrr"),
       totalSpend,
+      googleSpend,
+      metaSpend,
+      tiktokSpend,
       ifoodRevenue: ifoodRev,
       avgHealth: Math.round(avgHealth),
       atRisk,
       ifoodOrders: sum("ifood_orders"),
       avgTicket: sum("ifood_orders") > 0 ? ifoodRev / sum("ifood_orders") : 0,
       roi,
+      gmbViews,
+      tripReviews,
+      avgTripRating: Number(avgTripRating.toFixed(1)),
     };
   }, [results]);
 
@@ -319,6 +357,10 @@ export function ResultsView() {
   filters.channels.forEach(c => filterPills.push({ label: CHANNEL_OPTIONS.find(o => o.value === c)?.label ?? c, clear: () => setF("channels", filters.channels.filter(x => x !== c)) }));
   if (filters.healthRange !== "all") filterPills.push({ label: HEALTH_OPTIONS.find(o => o.value === filters.healthRange)?.label ?? "", clear: () => setF("healthRange", "all") });
   if (filters.mrrMin || filters.mrrMax) filterPills.push({ label: `MRR: ${filters.mrrMin || "0"} – ${filters.mrrMax || "∞"}`, clear: () => { setF("mrrMin", ""); setF("mrrMax", ""); } });
+  filters.clientIds.forEach(id => filterPills.push({ label: clients.find(c => c.id === id)?.name ?? id, clear: () => setF("clientIds", filters.clientIds.filter(x => x !== id)) }));
+  filters.managerIds.forEach(id => filterPills.push({ label: team.find(m => m.id === id)?.full_name ?? id, clear: () => setF("managerIds", filters.managerIds.filter(x => x !== id)) }));
+  filters.cities.forEach(city => filterPills.push({ label: `Cidade: ${city}`, clear: () => setF("cities", filters.cities.filter(x => x !== city)) }));
+  filters.types.forEach(t => filterPills.push({ label: `Segmento: ${t}`, clear: () => setF("types", filters.types.filter(x => x !== t)) }));
 
   const managersOptions = team.map((m: any) => ({ value: m.id, label: m.full_name ?? m.email }));
   const clientsOptions = clients.map((c: any) => ({ value: c.id, label: c.name }));
@@ -355,6 +397,14 @@ export function ResultsView() {
               className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-[13px] font-medium text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-[#e01c1c]/40 focus:ring-2 focus:ring-[#e01c1c]/10 transition-all"
             />
           </div>
+
+          {/* Client Filter (promoted to main bar!) */}
+          <MultiSelect
+            label={filters.clientIds.length ? `${filters.clientIds.length} clientes` : "Todos os Clientes"}
+            options={clientsOptions}
+            value={filters.clientIds as any}
+            onChange={v => setF("clientIds", v)}
+          />
 
           {/* Period */}
           <select
@@ -413,16 +463,16 @@ export function ResultsView() {
             onClick={() => setShowFilters(v => !v)}
             className={cn(
               "flex items-center gap-1.5 h-9 px-3 rounded-xl border text-[12px] font-semibold transition-all",
-              showFilters || filters.managerIds.length || filters.clientIds.length || filters.mrrMin || filters.mrrMax
+              showFilters || filters.managerIds.length || filters.cities.length || filters.types.length || filters.mrrMin || filters.mrrMax
                 ? "border-[#e01c1c]/40 bg-[#e01c1c]/5 text-[#e01c1c]"
                 : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0F172A] text-slate-600 dark:text-slate-400 hover:border-slate-300"
             )}
           >
             <SlidersHorizontal size={13} />
             Mais filtros
-            {(filters.managerIds.length + filters.clientIds.length + (filters.mrrMin || filters.mrrMax ? 1 : 0)) > 0 && (
+            {(filters.managerIds.length + filters.cities.length + filters.types.length + (filters.mrrMin || filters.mrrMax ? 1 : 0)) > 0 && (
               <span className="bg-[#e01c1c] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {filters.managerIds.length + filters.clientIds.length + (filters.mrrMin || filters.mrrMax ? 1 : 0)}
+                {filters.managerIds.length + filters.cities.length + filters.types.length + (filters.mrrMin || filters.mrrMax ? 1 : 0)}
               </span>
             )}
           </button>
@@ -430,15 +480,25 @@ export function ResultsView() {
 
         {/* Extended filters */}
         {showFilters && (
-          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Client selector */}
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* City selector */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Clientes específicos</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Cidade</label>
               <MultiSelect
-                label={filters.clientIds.length ? `${filters.clientIds.length} selecionados` : "Todos"}
-                options={clientsOptions}
-                value={filters.clientIds as any}
-                onChange={v => setF("clientIds", v)}
+                label={filters.cities.length ? `${filters.cities.length} selecionadas` : "Todas as cidades"}
+                options={cityOptions}
+                value={filters.cities as any}
+                onChange={v => setF("cities", v)}
+              />
+            </div>
+            {/* Segment/Type selector */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Segmento</label>
+              <MultiSelect
+                label={filters.types.length ? `${filters.types.length} selecionados` : "Todos os segmentos"}
+                options={typeOptions}
+                value={filters.types as any}
+                onChange={v => setF("types", v)}
               />
             </div>
             {/* Manager */}
@@ -492,13 +552,16 @@ export function ResultsView() {
       </Card>
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10 gap-3">
         {[
           { label: "MRR Total", value: fmt.currencyCompact(kpis.totalMrr), icon: DollarSign, color: "#10b981" },
-          { label: "Verba Gerenciada", value: fmt.currencyCompact(kpis.totalSpend), icon: Activity, color: "#ff8732" },
+          { label: "Verba Ads", value: fmt.currencyCompact(kpis.totalSpend), icon: Activity, color: "#ff8732" },
           { label: "Receita iFood", value: fmt.currencyCompact(kpis.ifoodRevenue), icon: ShoppingBag, color: "#EA1D2C" },
           { label: "Pedidos iFood", value: fmt.number(kpis.ifoodOrders), icon: ShoppingBag, color: "#f97316" },
           { label: "Ticket Médio", value: fmt.currencyCompact(kpis.avgTicket), icon: DollarSign, color: "#8b5cf6" },
+          { label: "Visualizações GMN", value: fmt.number(kpis.gmbViews), icon: Eye, color: "#34A853" },
+          { label: "Avaliações Trip", value: `${fmt.number(kpis.tripReviews)} (${kpis.avgTripRating} ★)`, icon: Star, color: "#34E0A1" },
+          { label: "ROI Geral", value: `${kpis.roi.toFixed(1)}x`, icon: TrendingUp, color: kpis.roi >= 2 ? "#10b981" : "#8b5cf6" },
           { label: "Health Médio", value: String(kpis.avgHealth), icon: Star, color: kpis.avgHealth >= 70 ? "#10b981" : kpis.avgHealth >= 50 ? "#f59e0b" : "#ef4444" },
           { label: "Em Risco", value: String(kpis.atRisk), icon: Users, color: kpis.atRisk === 0 ? "#10b981" : "#ef4444", hint: "Health < 70" },
         ].map(k => (
@@ -506,11 +569,11 @@ export function ResultsView() {
             <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-[0.08] blur-xl" style={{ background: k.color }} />
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{k.label}</span>
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${k.color}18`, border: `1px solid ${k.color}25` }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${k.color}18`, border: `1px solid ${k.color}25` }}>
                 <k.icon size={13} style={{ color: k.color }} />
               </div>
             </div>
-            <p className="text-[18px] font-extrabold text-slate-900 dark:text-white tabular-nums leading-none">
+            <p className="text-[16px] font-extrabold text-slate-900 dark:text-white tabular-nums leading-none">
               {lResults ? "…" : k.value}
             </p>
           </div>
@@ -618,7 +681,7 @@ export function ResultsView() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[1100px]">
+          <table className="w-full text-left min-w-[1400px]">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
                 <th className="px-5 py-3">
@@ -643,6 +706,15 @@ export function ResultsView() {
                   <SortableHeader col="meta_spend" label="Meta" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 </th>
                 <th className="px-4 py-3">
+                  <SortableHeader col="tiktok_spend" label="TikTok" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                </th>
+                <th className="px-4 py-3">
+                  <SortableHeader col="gmb_views" label="GMN (Views)" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                </th>
+                <th className="px-4 py-3">
+                  <SortableHeader col="tripadvisor_reviews" label="TripAdvisor" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                </th>
+                <th className="px-4 py-3">
                   <SortableHeader col="ifood_revenue" label="iFood Rev." sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 </th>
                 <th className="px-4 py-3">
@@ -662,7 +734,7 @@ export function ResultsView() {
               {lResults ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 13 }).map((_, j) => (
+                    {Array.from({ length: 16 }).map((_, j) => (
                       <td key={j} className="px-4 py-4">
                         <Skeleton className="h-4 w-full" />
                       </td>
@@ -671,7 +743,7 @@ export function ResultsView() {
                 ))
               ) : sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="text-center py-16">
+                  <td colSpan={16} className="text-center py-16">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                         <Filter size={24} className="text-slate-400" />
@@ -735,6 +807,31 @@ export function ResultsView() {
                       <span className={cn("text-[12px] font-bold tabular-nums", (r.meta_spend ?? 0) > 0 ? "text-[#1877F2]" : "text-slate-300 dark:text-slate-600")}>
                         {(r.meta_spend ?? 0) > 0 ? fmt.currencyCompact(r.meta_spend) : "—"}
                       </span>
+                    </td>
+                    {/* TikTok */}
+                    <td className="px-4 py-4">
+                      <span className={cn("text-[12px] font-bold tabular-nums", (r.tiktok_spend ?? 0) > 0 ? "text-[#00f2fe]" : "text-slate-300 dark:text-slate-600")}>
+                        {(r.tiktok_spend ?? 0) > 0 ? fmt.currencyCompact(r.tiktok_spend) : "—"}
+                      </span>
+                    </td>
+                    {/* GMN */}
+                    <td className="px-4 py-4">
+                      <span className={cn("text-[12px] font-bold tabular-nums", (r.gmb_views ?? 0) > 0 ? "text-[#34A853]" : "text-slate-300 dark:text-slate-600")}>
+                        {(r.gmb_views ?? 0) > 0 ? fmt.numberCompact(r.gmb_views) : "—"}
+                      </span>
+                    </td>
+                    {/* TripAdvisor */}
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col">
+                        <span className={cn("text-[12px] font-bold tabular-nums", (r.tripadvisor_reviews ?? 0) > 0 ? "text-[#34E0A1]" : "text-slate-300 dark:text-slate-600")}>
+                          {(r.tripadvisor_reviews ?? 0) > 0 ? `${r.tripadvisor_reviews} aval.` : "—"}
+                        </span>
+                        {(r.tripadvisor_reviews ?? 0) > 0 && (
+                          <span className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                            {r.tripadvisor_rating.toFixed(1)} ★
+                          </span>
+                        )}
+                      </div>
                     </td>
                     {/* iFood Rev */}
                     <td className="px-4 py-4">

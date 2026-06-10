@@ -1540,7 +1540,7 @@ export async function createTaskComment(payload: any) {
 // ============================================================
 export type AdminResultsFilters = {
   search?: string;
-  period?: "7d" | "30d" | "thisMonth" | "lastMonth" | "3m" | "custom";
+  period?: "today" | "yesterday" | "7d" | "14d" | "30d" | "thisMonth" | "lastMonth" | "3m" | "thisYear" | "custom";
   dateFrom?: string;
   dateTo?: string;
   clientIds?: string[];
@@ -1550,6 +1550,8 @@ export type AdminResultsFilters = {
   healthRange?: "all" | "healthy" | "risk" | "critical";
   mrrMin?: string;
   mrrMax?: string;
+  cities?: string[];
+  types?: string[];
 };
 
 function getPeriodDates(period: string, dateFrom?: string, dateTo?: string) {
@@ -1560,9 +1562,28 @@ function getPeriodDates(period: string, dateFrom?: string, dateTo?: string) {
       end: dateTo,
     };
   }
+  if (period === "today") {
+    return {
+      start: now.toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    };
+  }
+  if (period === "yesterday") {
+    const yesterday = new Date(now.getTime() - 86400000);
+    return {
+      start: yesterday.toISOString().slice(0, 10),
+      end: yesterday.toISOString().slice(0, 10),
+    };
+  }
   if (period === "7d") {
     return {
       start: new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    };
+  }
+  if (period === "14d") {
+    return {
+      start: new Date(now.getTime() - 14 * 86400000).toISOString().slice(0, 10),
       end: now.toISOString().slice(0, 10),
     };
   }
@@ -1586,6 +1607,12 @@ function getPeriodDates(period: string, dateFrom?: string, dateTo?: string) {
       end: now.toISOString().slice(0, 10),
     };
   }
+  if (period === "thisYear") {
+    return {
+      start: new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    };
+  }
   // default: 30d
   return {
     start: new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10),
@@ -1594,11 +1621,15 @@ function getPeriodDates(period: string, dateFrom?: string, dateTo?: string) {
 }
 
 export function useAdminResults(filters: AdminResultsFilters) {
-  const { period = "30d", search, clientIds, managerIds, statuses, channels, healthRange, mrrMin, mrrMax, dateFrom, dateTo } = filters;
+  const {
+    period = "30d", search, clientIds, managerIds, statuses, channels,
+    healthRange, mrrMin, mrrMax, dateFrom, dateTo, cities, types
+  } = filters;
 
   const deps = [
     period, search, JSON.stringify(clientIds), JSON.stringify(managerIds),
-    JSON.stringify(statuses), JSON.stringify(channels), healthRange, mrrMin, mrrMax, dateFrom, dateTo,
+    JSON.stringify(statuses), JSON.stringify(channels), healthRange, mrrMin, mrrMax,
+    dateFrom, dateTo, JSON.stringify(cities), JSON.stringify(types),
   ];
 
   return useArrayQuery<any>(
@@ -1618,6 +1649,8 @@ export function useAdminResults(filters: AdminResultsFilters) {
       if (healthRange === "healthy") clientQ = clientQ.gte("health_score", 70);
       else if (healthRange === "risk") clientQ = clientQ.lt("health_score", 70);
       else if (healthRange === "critical") clientQ = clientQ.lt("health_score", 50);
+      if (cities && cities.length > 0) clientQ = clientQ.in("city", cities);
+      if (types && types.length > 0) clientQ = clientQ.in("type", types);
 
       const { data: allClients, error: clientErr } = await clientQ.order("name");
       if (clientErr || !allClients) return { data: [], error: clientErr };
@@ -1644,7 +1677,7 @@ export function useAdminResults(filters: AdminResultsFilters) {
         .lte("date", end);
 
       if (channels && channels.length > 0) {
-        const adChannels = channels.filter(c => c === "google" || c === "meta");
+        const adChannels = channels.filter(c => c === "google" || c === "meta" || c === "tiktok");
         if (adChannels.length > 0) metricsQ = metricsQ.in("channel", adChannels);
       }
 
@@ -1663,7 +1696,32 @@ export function useAdminResults(filters: AdminResultsFilters) {
         ifoodData = ifoodRaw ?? [];
       }
 
-      // 4. Fetch last 6 days of ifood revenue per client for sparkline
+      // 4. Fetch GMB stats for period (only if gmb in channels or no channel filter)
+      const includeGmb = !channels || channels.length === 0 || channels.includes("gmb");
+      let gmbData: any[] = [];
+      if (includeGmb) {
+        const { data: gmbRaw } = await supabase
+          .from("gmb_stats")
+          .select("client_id, views, calls, directions, rating, date")
+          .in("client_id", ids)
+          .gte("date", start)
+          .lte("date", end);
+        gmbData = gmbRaw ?? [];
+      }
+
+      // 5. Fetch TripAdvisor reviews (source = 'tripadvisor') (only if tripadvisor in channels or no channel filter)
+      const includeTrip = !channels || channels.length === 0 || channels.includes("tripadvisor");
+      let reviewsData: any[] = [];
+      if (includeTrip) {
+        const { data: reviewsRaw } = await supabase
+          .from("reviews")
+          .select("client_id, rating, source, posted_at")
+          .in("client_id", ids)
+          .eq("source", "tripadvisor");
+        reviewsData = reviewsRaw ?? [];
+      }
+
+      // 6. Fetch last 6 days of ifood revenue per client for sparkline
       const sparkStart = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
       const { data: sparkRaw } = await supabase
         .from("ifood_orders")
@@ -1671,15 +1729,29 @@ export function useAdminResults(filters: AdminResultsFilters) {
         .in("client_id", ids)
         .gte("ordered_at", `${sparkStart}T00:00:00`);
 
-      // 5. Aggregate per client
+      // 7. Aggregate per client
       const result = filtered.map((c: any) => {
         const clientMetrics = (metrics ?? []).filter((m: any) => m.client_id === c.id);
         const googleMetrics = clientMetrics.filter((m: any) => m.channel === "google");
         const metaMetrics = clientMetrics.filter((m: any) => m.channel === "meta");
+        const tiktokMetrics = clientMetrics.filter((m: any) => m.channel === "tiktok");
 
         const google_spend = googleMetrics.reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
         const meta_spend = metaMetrics.reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
-        const total_spend = google_spend + meta_spend;
+        const tiktok_spend = tiktokMetrics.reduce((s: number, m: any) => s + Number(m.spend ?? 0), 0);
+        const total_spend = google_spend + meta_spend + tiktok_spend;
+
+        // GMB stats
+        const clientGmb = gmbData.filter((g: any) => g.client_id === c.id);
+        const gmb_views = clientGmb.reduce((s: number, g: any) => s + Number(g.views ?? 0), 0);
+        const gmb_calls = clientGmb.reduce((s: number, g: any) => s + Number(g.calls ?? 0), 0);
+
+        // Tripadvisor reviews
+        const clientTrip = reviewsData.filter((r: any) => r.client_id === c.id);
+        const tripadvisor_reviews = clientTrip.length;
+        const tripadvisor_rating = tripadvisor_reviews > 0
+          ? clientTrip.reduce((s: number, r: any) => s + Number(r.rating ?? 0), 0) / tripadvisor_reviews
+          : 0;
 
         const clientIfood = ifoodData.filter((o: any) => o.client_id === c.id && !o.cancelled);
         const ifood_revenue = clientIfood.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
@@ -1705,7 +1777,12 @@ export function useAdminResults(filters: AdminResultsFilters) {
           manager_name: c.manager?.full_name ?? null,
           google_spend,
           meta_spend,
+          tiktok_spend,
           total_spend,
+          gmb_views,
+          gmb_calls,
+          tripadvisor_reviews,
+          tripadvisor_rating,
           ifood_revenue,
           ifood_orders,
           ifood_ticket,
@@ -1718,4 +1795,45 @@ export function useAdminResults(filters: AdminResultsFilters) {
     },
     deps
   );
+}
+
+// ============================================================
+// CLIENT CREDENTIALS
+// ============================================================
+export type ClientCredential = {
+  id: string;
+  client_id: string;
+  title: string;
+  username?: string;
+  password?: string;
+  url?: string;
+  notes?: string;
+  created_at: string;
+};
+
+export function useClientCredentials(clientId: string | undefined) {
+  return useArrayQuery<ClientCredential>(
+    async () => {
+      if (!clientId) return { data: [], error: null };
+      const { data, error } = await supabase
+        .from("client_credentials")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("title");
+      return { data: data as ClientCredential[] | null, error };
+    },
+    [clientId]
+  );
+}
+
+export async function createClientCredential(payload: Partial<ClientCredential> & { client_id: string; title: string }) {
+  return supabase.from("client_credentials").insert(payload).select().single();
+}
+
+export async function updateClientCredential(id: string, payload: Partial<ClientCredential>) {
+  return supabase.from("client_credentials").update(payload).eq("id", id).select().single();
+}
+
+export async function deleteClientCredential(id: string) {
+  return supabase.from("client_credentials").delete().eq("id", id);
 }

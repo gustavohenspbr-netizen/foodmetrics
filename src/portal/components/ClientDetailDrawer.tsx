@@ -16,6 +16,8 @@ import { EmptyState } from "./ui/EmptyState";
 import { useToast } from "./ui/Toast";
 import { ClientFormModal } from "./ClientFormModal";
 import { useClientDetail, updateClient, deleteClient, upsertIntegration } from "../lib/api";
+import { useProfile } from "../lib/auth";
+import { CredentialsManager } from "./CredentialsManager";
 import { fmt } from "../lib/format";
 import { buildWhatsAppUrl, formatPhoneDisplay, waTemplates } from "../lib/whatsapp";
 
@@ -49,6 +51,8 @@ const STATUS_LABEL: Record<string, string> = {
 export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
   const toast = useToast();
   const { data, loading, refetch } = useClientDetail(clientId ?? undefined);
+  const { profile } = useProfile();
+  const isAdmin = profile?.role === "admin";
   const [tab, setTab] = useState("overview");
   const [editOpen, setEditOpen] = useState(false);
   const [configCardapioOpen, setConfigCardapioOpen] = useState(false);
@@ -89,6 +93,7 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
     { id: "finance", label: "Financeiro", count: data?.invoices?.length },
     { id: "marketing", label: "Marketing", count: data?.integrations?.length },
     { id: "ops", label: "Operação", count: (data?.tasks?.length ?? 0) + (data?.events?.length ?? 0) },
+    ...(isAdmin ? [{ id: "credentials", label: "Senhas" }] : []),
   ];
 
   // URL do WhatsApp principal (com saudação)
@@ -566,6 +571,10 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
                   )}
                 </Card>
               </div>
+            )}
+
+            {tab === "credentials" && isAdmin && (
+              <CredentialsManager clientId={data.id} />
             )}
           </div>
         )}
