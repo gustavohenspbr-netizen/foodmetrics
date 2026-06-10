@@ -23,7 +23,7 @@ const TASK_COLUMNS = [
 export function TeamView() {
   const [view, setView] = useState("team");
   
-  const { data: team = [], loading: lTeam } = useTeam();
+  const { data: team = [], loading: lTeam, refetch: refetchTeam } = useTeam();
   const { data: tasks = [], loading: lTasks, refetch: refetchTasks } = useTasks();
   const { data: spaces = [] } = useProjectSpaces();
   const { data: folders = [] } = useProjectFolders();
@@ -240,6 +240,10 @@ export function TeamView() {
         isOpen={isMemberModalOpen}
         onClose={() => setIsMemberModalOpen(false)}
         member={selectedMember}
+        onSave={() => {
+          setIsMemberModalOpen(false);
+          refetchTeam();
+        }}
       />
 
       <InviteMemberModal
