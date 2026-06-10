@@ -52,7 +52,7 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
   const toast = useToast();
   const { data, loading, refetch } = useClientDetail(clientId ?? undefined);
   const { profile } = useProfile();
-  const isAdmin = profile?.role === "admin";
+  const isStaff = profile && ["admin", "manager", "support"].includes(profile.role);
   const [tab, setTab] = useState("overview");
   const [editOpen, setEditOpen] = useState(false);
   const [configCardapioOpen, setConfigCardapioOpen] = useState(false);
@@ -93,7 +93,7 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
     { id: "finance", label: "Financeiro", count: data?.invoices?.length },
     { id: "marketing", label: "Marketing", count: data?.integrations?.length },
     { id: "ops", label: "Operação", count: (data?.tasks?.length ?? 0) + (data?.events?.length ?? 0) },
-    ...(isAdmin ? [{ id: "credentials", label: "Senhas" }] : []),
+    ...(isStaff ? [{ id: "credentials", label: "Senhas" }] : []),
   ];
 
   // URL do WhatsApp principal (com saudação)
@@ -573,7 +573,7 @@ export function ClientDetailDrawer({ clientId, onClose, onChanged }: Props) {
               </div>
             )}
 
-            {tab === "credentials" && isAdmin && (
+            {tab === "credentials" && isStaff && (
               <CredentialsManager clientId={data.id} />
             )}
           </div>
