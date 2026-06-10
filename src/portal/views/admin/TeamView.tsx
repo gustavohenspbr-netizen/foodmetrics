@@ -11,6 +11,7 @@ import { useTeam, useTasks, useProjectSpaces, useProjectFolders, useProjectLists
 import { cn } from "../../lib/cn";
 import { TaskModal } from "../../components/TaskModal";
 import { MemberModal } from "../../components/MemberModal";
+import { InviteMemberModal } from "../../components/InviteMemberModal";
 
 const TASK_COLUMNS = [
   { id: "todo", title: "A fazer", color: "#94a3b8" },
